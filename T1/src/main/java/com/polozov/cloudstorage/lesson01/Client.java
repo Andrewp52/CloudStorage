@@ -32,6 +32,11 @@ public class Client extends JFrame {
 			} else if ("download".equals(cmd[0])) {
 				getFile(cmd[1]);
 			}
+			try {
+				in.readUTF(); 					// Reading echo
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		});
 
 		panel.add(textField);
@@ -50,7 +55,30 @@ public class Client extends JFrame {
 	}
 
 	private void getFile(String s) {
-		// TODO: 14.06.2021  
+		// TODO: 14.06.2021
+		try {
+			out.writeUTF("download");
+			out.writeUTF(s);
+			String ans = in.readUTF();
+			if(ans.equals("ERROR")){
+				throw new FileNotFoundException("Cannot download file " + s);
+			}
+			long size = in.readLong();
+			File file = new File("client" + File.separator + s);
+			file.createNewFile();									// Checks existence of the file automatically.
+			FileOutputStream fos = new FileOutputStream(file);
+			byte[] buffer = new byte[8 * 1024];
+			for (int i = 0; i < (size + (buffer.length - 1)) / (buffer.length); i++) {
+				int read = in.read(buffer);
+				fos.write(buffer, 0, read);
+			}
+			fos.close();
+			out.writeUTF("Received");
+			System.out.println("Download complete");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void sendFile(String filename) {
@@ -76,7 +104,7 @@ public class Client extends JFrame {
 			out.flush();
 
 			String status = in.readUTF();
-			System.out.println("sending status: " + status);
+			System.out.printf("sending status: %s\n", status);
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
