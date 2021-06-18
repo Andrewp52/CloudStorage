@@ -1,9 +1,6 @@
 package com.polozov.cloudstorage.lesson01;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
@@ -48,6 +45,28 @@ public class ClientHandler implements Runnable {
 
 				if ("download".equals(command)) {
 					// TODO: 14.06.2021
+					try {
+						File file = new File("server" + File.separator + in.readUTF());
+						if (!file.exists()) {
+							throw new FileNotFoundException("File not found: " + file.getName());
+						}
+						out.writeUTF("FOUND");
+						FileInputStream fis = new FileInputStream(file);
+						out.writeLong(file.length());
+
+						int read = 0;
+						byte[] buffer = new byte[8 * 1024];
+						while ((read = fis.read(buffer)) != -1) {
+							out.write(buffer, 0, read);
+						}
+
+						fis.close();
+						out.flush();
+						System.out.printf("file %s %s by client\n", file.getName(), in.readUTF());
+					}
+					catch (IOException e){
+						out.writeUTF("ERROR");
+					}
 				}
 				if ("exit".equals(command)) {
 					System.out.printf("Client %s disconnected correctly\n", socket.getInetAddress());
