@@ -1,6 +1,7 @@
 package com.pae.cloudstorage.client.network;
 
 import com.pae.cloudstorage.client.common.CallBack;
+import com.pae.cloudstorage.client.network.handlers.MessageHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -19,12 +20,10 @@ public class Connector {
             bs.group(workGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<>() {
                 @Override
                 protected void initChannel(Channel channel){
-                    channel.pipeline().addLast(new StringDecoder()).addLast(new StringEncoder()).addLast(new SimpleChannelInboundHandler<String>() {
-                        @Override
-                        protected void channelRead0(ChannelHandlerContext ctx, String s){
-                            callBack.call(s);
-                        }
-                    });
+                    channel.pipeline()
+                            .addLast(new StringDecoder())
+                            .addLast(new StringEncoder())
+                            .addLast(new MessageHandler(callBack));
                     chan = channel;
                 }
             });

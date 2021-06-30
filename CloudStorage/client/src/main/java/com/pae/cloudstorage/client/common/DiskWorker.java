@@ -6,9 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
@@ -68,13 +65,14 @@ public class DiskWorker {
 
     // Makes directory(ies) with given path.
     public void mkdir(String dir) {
-        String ans = String.format("%s created\n", dir);
-        try {
-            Files.createDirectories(Path.of(this.location.toString(), dir));
-        } catch (IOException e){
-            ans = String.format("Can`t create path %s\n", dir);
+        if(location != null){
+            try {
+                Files.createDirectories(Path.of(this.location.toString(), dir));
+                getFilesList();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
         }
-        callBack.call(ans);
     }
 
     // Changes client`s location directory (goes back up to client`s root directory)

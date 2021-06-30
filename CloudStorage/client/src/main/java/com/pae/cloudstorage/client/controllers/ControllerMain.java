@@ -2,6 +2,7 @@ package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.common.DiskWorker;
 import com.pae.cloudstorage.client.network.Connector;
+import com.pae.cloudstorage.client.stages.StageDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,7 +14,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
@@ -147,6 +147,24 @@ public class ControllerMain implements Initializable {
             diskWorker.changeDirectory("..");
         } else {
             connector.sendCommand("cd ..");
+        }
+    }
+
+    // Creates a new directory (remote / local) depends on event source.
+    // Path chain (d1/d2/....) is also works.
+    public void createDirectory(Event actionEvent){
+        if(isLocalPanelAction(actionEvent)){
+            new StageDialog(
+                    "Create new directory on local storage",
+                    getClass().getResource("/fxml/MakedirDialog.fxml"),
+                    args -> diskWorker.mkdir((String) args[0])
+            );
+        } else {
+            new StageDialog(
+                    "Create new directory on remote storage",
+                    getClass().getResource("/fxml/MakedirDialog.fxml"),
+                    args -> connector.sendCommand("mkdir " + (String) args[0])
+            );
         }
     }
 

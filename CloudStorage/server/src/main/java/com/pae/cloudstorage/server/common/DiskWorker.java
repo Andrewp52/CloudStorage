@@ -76,13 +76,12 @@ public class DiskWorker {
 
     // Makes directory(ies) with given path.
     public void mkdir(String dir) {
-        String ans = String.format("%s created\n", dir);
-        try {
-            Files.createDirectories(Path.of(this.location.toString(), dir));
-        } catch (IOException e){
-            ans = String.format("Can`t create path %s\n", dir);
-        }
-        callBack.call(ans);
+            try {
+                Files.createDirectories(Path.of(this.location.toString(), dir));
+                getFilesList();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
     }
 
     // Changes client`s location directory (goes back up to client`s root directory)

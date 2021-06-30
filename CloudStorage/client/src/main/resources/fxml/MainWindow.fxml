@@ -116,7 +116,7 @@
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -127,6 +127,9 @@
                                        <HBox.margin>
                                           <Insets left="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Make new directory" />
+                                       </tooltip>
                                     </Button>
                                     <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
@@ -210,7 +213,7 @@
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -221,6 +224,9 @@
                                        <HBox.margin>
                                           <Insets left="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Make new directory" />
+                                       </tooltip>
                                     </Button>
                                     <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
