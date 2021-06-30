@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 // Class for disk operations.
 // Needs Callback implementation.
+// TODO: remove user data fom here when dataservice and full auth will work
 public class DiskWorker {
     static final Path SRVROOT = Path.of("server");
     String nick;
