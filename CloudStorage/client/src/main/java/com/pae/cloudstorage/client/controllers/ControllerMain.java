@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
@@ -19,10 +20,14 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class ControllerMain implements Initializable {
+
     private Connector connector;
     private DiskWorker diskWorker;
     private ObservableList<String> remote = FXCollections.observableArrayList();
     private ObservableList<String> local = FXCollections.observableArrayList();
+
+    @FXML public VBox container;
+    @FXML public HBox loginBox;
     @FXML public VBox navRemote;
     @FXML public VBox navLocal;
     @FXML public ListView<String> remoteListView;
@@ -74,6 +79,11 @@ public class ControllerMain implements Initializable {
     private void switchControls(boolean enable){
         navLocal.disableProperty().setValue(!enable);
         navRemote.disableProperty().setValue(!enable);
+        if(enable){
+            container.getChildren().remove(loginBox);
+        } else {
+            container.getChildren().add(1, loginBox);
+        }
     }
 
     // Received message handler
@@ -182,4 +192,8 @@ public class ControllerMain implements Initializable {
         connector.stop();
     }
 
+    public void logoff(ActionEvent event) {
+        stop();
+        switchControls(false);
+    }
 }
