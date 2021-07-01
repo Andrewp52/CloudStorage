@@ -1,6 +1,6 @@
 package com.pae.cloudstorage.server.data;
 
-import com.pae.cloudstorage.server.common.User;
+import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.data.connectors.DataConnector;
 
 import java.sql.Connection;

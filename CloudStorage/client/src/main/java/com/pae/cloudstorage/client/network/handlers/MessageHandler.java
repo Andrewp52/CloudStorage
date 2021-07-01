@@ -1,6 +1,6 @@
 package com.pae.cloudstorage.client.network.handlers;
 
-import com.pae.cloudstorage.client.common.CallBack;
+import com.pae.cloudstorage.common.CallBack;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 

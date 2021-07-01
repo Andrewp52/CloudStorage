@@ -1,6 +1,6 @@
 package com.pae.cloudstorage.client.controllers;
 
-import com.pae.cloudstorage.client.common.CallBack;
+import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.client.stages.StageDialog;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;

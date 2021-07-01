@@ -1,6 +1,6 @@
 package com.pae.cloudstorage.client.controllers;
 
-import com.pae.cloudstorage.client.common.DiskWorker;
+import com.pae.cloudstorage.common.DiskWorker;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.StageDialog;
 import javafx.application.Platform;

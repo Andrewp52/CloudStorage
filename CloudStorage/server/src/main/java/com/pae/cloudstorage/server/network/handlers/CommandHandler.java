@@ -1,7 +1,8 @@
 package com.pae.cloudstorage.server.network.handlers;
 
 
-import com.pae.cloudstorage.server.common.DiskWorker;
+import com.pae.cloudstorage.common.DiskWorker;
+import com.pae.cloudstorage.common.DiskWorkerRemote;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.LogManager;
@@ -40,7 +41,7 @@ import static com.pae.common.Command.*;
         String command = s.replace("\n", "").replace("\r", "");
         if(this.nick == null){
             if(auth(command)){
-                worker = new DiskWorker(this.nick, o -> ctx.channel().writeAndFlush(o[0]));     // Callback impl. for DiskWorker.
+                worker = new DiskWorkerRemote(this.nick, o -> ctx.channel().writeAndFlush(o[0]));     // Callback impl. for DiskWorker.
                 ctx.channel().writeAndFlush(AUTH_OK.name());
             } else {
                 ctx.channel().writeAndFlush(AUTH_FAIL.name());

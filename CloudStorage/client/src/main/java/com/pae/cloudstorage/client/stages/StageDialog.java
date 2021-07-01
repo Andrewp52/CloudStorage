@@ -1,6 +1,6 @@
 package com.pae.cloudstorage.client.stages;
 
-import com.pae.cloudstorage.client.common.CallBack;
+import com.pae.cloudstorage.common.CallBack;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
