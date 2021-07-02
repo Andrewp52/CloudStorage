@@ -1,11 +1,10 @@
 package com.pae.cloudstorage.client.controllers;
 
-import com.pae.cloudstorage.common.DiskWorker;
 import com.pae.cloudstorage.client.network.Connector;
+import com.pae.cloudstorage.common.DiskWorker;
 import com.pae.cloudstorage.client.stages.StageDialog;
+import com.pae.cloudstorage.common.FSObject;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -19,12 +18,12 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 
+import static com.pae.cloudstorage.common.Command.*;
+
 public class ControllerMain implements Initializable {
 
     private Connector connector;
     private DiskWorker diskWorker;
-    private ObservableList<String> remote = FXCollections.observableArrayList();
-    private ObservableList<String> local = FXCollections.observableArrayList();
 
     @FXML public VBox container;
     @FXML public HBox loginBox;
@@ -42,17 +41,16 @@ public class ControllerMain implements Initializable {
 
     // STUB AUTH
     public void authUser() {
-        connector.start();
-        connector.sendCommand("auth aaa");
+        connector = new Connector();
+        connector.requestString(AUTH_REQ, " aaa", (a) -> Platform.runLater(() ->messageReceived((String) a[0])));
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        connector = new Connector((a)-> {
-            Platform.runLater(() -> messageReceived((String) a[0]));            // Connector callback
-        });
+        localListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        remoteListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         diskWorker = new DiskWorker((s) -> Platform.runLater(() -> {
-            fillFilesList(local, localListView, (String) s[0]);             // Local worker callback
+            updateLocalList((List<FSObject>) s[0]);             // Local worker callback
         }));
         // Remote list mouse click handler
         remoteListView.setOnMouseClicked(event -> {
@@ -90,33 +88,24 @@ public class ControllerMain implements Initializable {
     // When first run and auth is ok, sends initial "ls" to server
     // TODO: think about message handling not here/
     private void messageReceived(String msg) {
-        if(msg.equals("AUTH_OK")){
+        if(msg.equals(AUTH_OK.name())){
             switchControls(true);
-            requestLocalList();
-            connector.sendCommand("ls");
-        } else if(msg.contains("<DIR_LIST>")){
-            fillFilesList(remote, remoteListView, msg);
+            diskWorker.getFilesList();
+            connector.requestObject(FILE_LIST, (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
         }
         statusLabel.setText(msg);
     }
 
-    // Request local DiskWorker for this computer files list
-    // TODO: modify local worker and caller for working with Path objects instead of string
-    private void requestLocalList() {
-        diskWorker.getFilesList();
+    private void updateRemoteList(Object o){
+        List<FSObject> rList = (List<FSObject>) o;
+        remoteListView.getItems().clear();
+        rList.forEach((f) -> remoteListView.getItems().addAll(f.toString()));
     }
 
-    // Fills collection for listView (remote storage)
-    private void fillFilesList(List<String> listToFill, ListView viewToFill, String msg) {
-        listToFill.clear();
-        String str = msg.replace("<DIR_LIST>", "");
-        Map<String, Boolean> filesMap = new HashMap<>();
-        String[] arr = str.split("[*]");
-        listToFill.addAll(Arrays.asList(arr));
-        viewToFill.getItems().setAll(listToFill);
-        viewToFill.refresh();
+    private void updateLocalList(List<FSObject> fList){
+        localListView.getItems().clear();
+        fList.forEach((f) -> localListView.getItems().addAll(f.toString()));
     }
-
 
     // Calls by ListView onClick handler
     // If is directory selected - sends "cd path" command to local diskWorker or connector
@@ -138,7 +127,7 @@ public class ControllerMain implements Initializable {
         } else {
             if(s != null){
                 if(s.contains("<D>")){
-                    connector.sendCommand("cd " + s.replace("<D>", ""));
+                    connector.requestObject(FILE_CD, " " + s.replace("<D>", ""), (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
                 }
             }
         }
@@ -148,7 +137,7 @@ public class ControllerMain implements Initializable {
         if(isLocalPanelAction(actionEvent)){
             diskWorker.changeDirectory("~");
         } else {
-            connector.sendCommand("cd ~");
+            connector.requestObject(FILE_CD, " ~", (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
         }
     }
 
@@ -156,7 +145,7 @@ public class ControllerMain implements Initializable {
         if(isLocalPanelAction(actionEvent)){
             diskWorker.changeDirectory("..");
         } else {
-            connector.sendCommand("cd ..");
+            connector.requestObject(FILE_CD, " ..", (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
         }
     }
 
@@ -173,8 +162,33 @@ public class ControllerMain implements Initializable {
             new StageDialog(
                     "Create new directory on remote storage",
                     getClass().getResource("/fxml/MakedirDialog.fxml"),
-                    args -> connector.sendCommand("mkdir " + (String) args[0])
+                    args -> connector.requestObject(FILE_MKDIR, " " + (String) args[0], (a) -> Platform.runLater(() ->updateRemoteList(a[0])))
             );
+        }
+    }
+
+    public void removeSelected(ActionEvent event) {
+        if(isLocalPanelAction(event)){
+            new StageDialog(
+                    "Remove file(s) from local storage",
+                    getClass().getResource("/fxml/DeleteDialog.fxml"),
+                    args -> {
+                        localListView.getSelectionModel().getSelectedItems().forEach(
+                                (s) ->diskWorker.removeFile(s.replace("<D>", ""))
+                        );
+                        diskWorker.getFilesList();
+                    });
+        } else {
+            new StageDialog(
+                    "Remove file(s) from remote storage",
+                    getClass().getResource("/fxml/DeleteDialog.fxml"),
+                    args -> {
+                        List<String> i = remoteListView.getSelectionModel().getSelectedItems();
+                        remoteListView.getSelectionModel().getSelectedItems().forEach(
+                                (s) ->connector.requestNoCallBack(FILE_REMOVE, " " + s.replace("<D>", ""))
+                        );
+                        connector.requestObject(FILE_LIST, o -> updateRemoteList(o[0]));
+                    });
         }
     }
 
@@ -196,4 +210,5 @@ public class ControllerMain implements Initializable {
         stop();
         switchControls(false);
     }
+
 }

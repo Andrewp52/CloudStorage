@@ -1,9 +1,10 @@
 package com.pae.cloudstorage.common;
 
+import java.io.Serializable;
 import java.util.StringJoiner;
 
 // Class contains user profile (Filling by DataService from DB).
-public class User {
+public class User implements Serializable {
     private transient final int id;
     private String nick;
     private String firstName;
@@ -20,6 +21,34 @@ public class User {
         this.email = email;
         this.root = root;
         this.quota = quota;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getNick() {
+        return nick;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getRoot() {
+        return root;
+    }
+
+    public long getQuota() {
+        return quota;
     }
 
     // This toString is compatible for transfer to client.

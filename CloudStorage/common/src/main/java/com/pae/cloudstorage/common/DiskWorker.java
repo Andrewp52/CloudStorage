@@ -6,13 +6,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.StringJoiner;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 // Class for disk operations.
 // Needs Callback implementation.
-// TODO: modify local worker and caller for working with Path objects instead of string
-
 
 public class DiskWorker {
     Path location;
@@ -31,25 +30,19 @@ public class DiskWorker {
     }
 
     public void getFilesList() {
-        StringJoiner sj = new StringJoiner("*", "<DIR_LIST>", "");
+        List<FSObject> fList = new ArrayList<>();
         if(location == null){
-            FileSystems.getDefault().getRootDirectories().forEach((d) -> {
-                sj.add("<D>" + d.getRoot().toString());
-            });
+            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d)));
         } else {
             try{
                 Stream<Path> sp = Files.list(location);
-                sp.forEach(path ->
-                        sj.add(Files.isDirectory(path) ?
-                                "<D>" + path.getFileName().toString() :
-                                path.getFileName().toString()
-                        ));
+                sp.forEach(path -> fList.add(new FSObject(path)));
                 sp.close();
             } catch (IOException e){
                 e.printStackTrace();
             }
         }
-        callBack.call(sj.toString());
+        callBack.call(fList);
     }
 
     // Creates new file with given name
@@ -95,18 +88,11 @@ public class DiskWorker {
     // Removes file or directory (except of not empty directory) returns String - operation result.
     public void removeFile(String name) {
         Path p = location.resolve(name);
-        String ans = "ok\n";
         try {
             Files.delete(p);
-        } catch (NoSuchFileException e) {
-            ans = "Error : no such file - " + name + "\n";
-        } catch (DirectoryNotEmptyException e){
-            ans = "Error : directory not empty - " + name + "\n";
         } catch (IOException e) {
             e.printStackTrace();
-            ans = "Error : IO -" + name + "\n";
         }
-        callBack.call(ans);
     }
 
     // Reads content of a given file

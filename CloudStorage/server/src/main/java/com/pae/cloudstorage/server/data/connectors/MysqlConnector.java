@@ -1,53 +1,54 @@
 package com.pae.cloudstorage.server.data.connectors;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.pae.cloudstorage.server.ConfigReader;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 
-public class MysqlConnector extends DataConnector {
+public class MysqlConnector implements DataConnector {
+    Map<String, String> conf;
     private static final MysqlDataSource ds = new MysqlDataSource();
     private static MysqlConnector connector;
+    private Connection connection;
 
-    private MysqlConnector(String login, String pass, String db, String host, int port) {
-        super.login = login;
-        super.pass = pass;
-        super.db = db;
-        super.host = host;
-        super.port = port;
-        super.TIMEOUT = 10;
+    private MysqlConnector(String confFile) throws IOException {
+        conf = ConfigReader.readConfFile(confFile);
     }
 
-    public static MysqlConnector getConnector(String login, String pass, String db, String host, int port){
+    public static MysqlConnector getConnector(String confFile) throws IOException {
         if(connector == null){
-            connector = new MysqlConnector(login, pass, db, host, port);
+            connector = new MysqlConnector(confFile);
         }
         return connector;
     }
 
+    @Override
     public Connection getConnection(){
-        if(this.conn == null){
+        if(this.connection == null){
             try {
-                ds.setLoginTimeout(TIMEOUT);
-                ds.setUser(super.login);
-                ds.setPassword(super.pass);
-                ds.setDatabaseName(super.db);
-                ds.setPort(this.port);
-                ds.setServerName(this.host);
-                super.conn = ds.getConnection();
+                this.ds.setUser(conf.get("dblogin"));
+                this.ds.setPassword(conf.get("dbpass"));
+                this.ds.setDatabaseName(conf.get("dbname"));
+                this.ds.setServerName(conf.get("dbhost"));
+                this.ds.setPort(Integer.parseInt(conf.get("dbport")));
+                this.ds.setLoginTimeout(Integer.parseInt(conf.get("dbtimeout")));
+                this.connection = this.ds.getConnection();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
-        return conn;
+        return this.connection;
     }
 
     @Override
     public void closeConnection() {
         try {
-            if (super.conn != null && !conn.isClosed()){
-                super.conn.close();
-                super.conn = null;
+            if (this.connection != null && !this.connection.isClosed()){
+                this.connection.close();
+                this.connection = null;
             }
 
         } catch (SQLException e) {

@@ -1,81 +1,104 @@
 package com.pae.cloudstorage.client.network;
 
 import com.pae.cloudstorage.common.CallBack;
-import com.pae.cloudstorage.client.network.handlers.MessageHandler;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
+import com.pae.cloudstorage.common.Command;
+import java.io.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import static com.pae.cloudstorage.common.Command.AUTH_OUT;
 
 public class Connector {
-    private final String HOST = "localhost";
-    private final int PORT = 9999;
-    private ChannelFuture channelFuture;
-    private Thread workingThread;
-    private CallBack callBack;
-    public Connector(CallBack callBack) {
-        this.callBack = callBack;
-    }
+    private final String host = "localhost";
+    private final int port = 9999;
+    private Socket socket;
+    private DataOutputStream out;
+    private DataInputStream in;
 
-    // Starts Netty client connection
-    public void start() {
-        if(this.channelFuture == null && workingThread == null){
-            startClient();
-            while (this.channelFuture == null){
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    // Stops Netty client
-    public void stop(){
-        if(channelFuture == null){
-            return;
-        }
+    public Connector() {
         try {
-            channelFuture.channel().close().sync();
-            workingThread.join();           //  Waiting until workingThread will die
-            channelFuture = null;           //  Release ChannelFuture
-            workingThread = null;           //  Release Thread
-        } catch (InterruptedException e) {
+            socket = new Socket(host, port);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e){
             e.printStackTrace();
         }
     }
 
-    // Starts Netty client thread
-    private void startClient(){
-        this.workingThread = new Thread(() -> {
-            NioEventLoopGroup workGroup = new NioEventLoopGroup();
-            Bootstrap bs = new Bootstrap();
-            bs.group(workGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<>() {
-                @Override
-                protected void initChannel(Channel channel){
-                    channel.pipeline()
-                            .addLast(new StringDecoder())
-                            .addLast(new StringEncoder())
-                            .addLast(new MessageHandler(callBack));
-                }
-            });
-            try {
-                this.channelFuture = bs.connect(HOST, PORT).sync();
-                this.channelFuture.channel().closeFuture().sync();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                workGroup.shutdownGracefully();
-            }
-        });
-        this.workingThread.start();
+    // Sends request to remote server expecting Object answer.
+    public void requestObject(Command cmd, String arg, CallBack callBack){
+        try {
+            out.write((cmd.name() + arg).getBytes());
+            ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
+            ObjectInputStream ois = new ObjectInputStream(bis);
+            callBack.call(ois.readObject());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
-    // Sends command to remote server
-    public void sendCommand(String command){
-        this.channelFuture.channel().writeAndFlush(command);
+    public void requestObject(Command cmd, CallBack callBack){
+        requestObject(cmd, "", callBack);
+    }
+
+    // Sends request to remote server expecting string answer.
+    public void requestString(Command cmd, String arg, CallBack callBack){
+        if(cmd.equals(AUTH_OUT)){
+            stop();
+            return;
+        }
+        String res = null;
+        try{
+            out.write((cmd.name() + arg).getBytes());
+            res = new String(getBytesFromInput(), StandardCharsets.UTF_8);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        callBack.call(res);
+    }
+
+    public void requestString(Command cmd, CallBack callBack){
+        requestString(cmd, "", callBack);
+    }
+
+    // Reading byte array fom input stream
+    private byte[] getBytesFromInput(){
+        byte[] arr;
+        try {
+            int start = in.readInt();
+            int len = in.readInt();
+            arr = new byte[len];
+            in.read(arr, start, len);
+        } catch (IOException e){
+            e.printStackTrace();
+            return new byte[0];
+        }
+        return arr;
+    }
+
+    // Sends bye message to remote server and closes connection.
+    public void stop(){
+        try {
+            out.write(AUTH_OUT.name().getBytes());
+            out.flush();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Checks connection
+    private boolean isConnectionAlive(){
+        return (socket != null && !socket.isClosed()) && (in != null && out != null);
+    }
+
+    // Sends request to remote server without any results required.
+    // Awaiting single byte for handling confirmation
+    public void requestNoCallBack(Command cmd, String arg) {
+        try {
+            out.writeUTF(cmd.name() + arg);
+            in.readByte();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
