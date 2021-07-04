@@ -65,9 +65,11 @@ public class Connector {
     // Sends bye message to remote server and closes connection.
     public void stop(){
         try {
-            out.write(AUTH_OUT.name().getBytes());
-            out.flush();
-            socket.close();
+            if(isConnectionAlive()){
+                out.write(AUTH_OUT.name().getBytes());
+                out.flush();
+                socket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

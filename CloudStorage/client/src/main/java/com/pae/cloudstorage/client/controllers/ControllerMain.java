@@ -222,14 +222,14 @@ public class ControllerMain implements Initializable {
 
     }
 
-    public void stop(){
-        connector.stop();
-    }
-
     public void logoff(ActionEvent event) {
         stop();
         switchControls(false);
     }
 
+    // Closes connection.
+    public void stop(){
+        connector.stop();
+    }
 
 }
