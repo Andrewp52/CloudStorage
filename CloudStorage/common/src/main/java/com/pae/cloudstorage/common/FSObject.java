@@ -23,6 +23,7 @@ public class FSObject implements Serializable {
             isDirectory = true;
         } else {
             name = p.getFileName().toString();
+            path = p.toString();
             isDirectory = Files.isDirectory(p);
         }
         if(!isDirectory){

@@ -1,18 +1,15 @@
 package com.pae.cloudstorage.server.network.handlers;
 
-import com.pae.cloudstorage.common.DiskWorkerRemote;
 import com.pae.cloudstorage.common.User;
-import io.netty.buffer.ByteBuf;
+import com.pae.cloudstorage.server.filesystem.FSWorker;
 import io.netty.channel.*;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 import static com.pae.cloudstorage.common.Command.*;
 
 /**
  * Main command handler.
- * Adding automatically by AuthHandler if authentication succeed.
+ * It is adds automatically by AuthHandler if authentication succeed.
  * When added, it removes AuthHandler from pipeline.
  * Serves client`s commands (filesystem navigation & basic actions)
  * When it reads upload / download command it adds FileReceiverHandler or FileSenderHandler
@@ -22,7 +19,7 @@ import static com.pae.cloudstorage.common.Command.*;
 public class CommHandler extends SimpleChannelInboundHandler<String> {
     User user;
     ChannelHandlerContext context;
-    DiskWorkerRemote worker;
+    FSWorker worker;
     public CommHandler(User user) {
         this.user = user;
     }
@@ -31,7 +28,7 @@ public class CommHandler extends SimpleChannelInboundHandler<String> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         if(ctx.channel().pipeline().get(AuthHandler.class) != null){
             ctx.channel().pipeline().remove(AuthHandler.class);
-            worker = new DiskWorkerRemote(this.user.getNick(), (a) -> sendObject(a[0], ctx));   // Callback impl. for DiskWorker.
+            worker = new FSWorker(this.user.getNick(), (a) -> ctx.channel().writeAndFlush(a[0])); // Callback impl. for FSWorker.
             context = ctx;
         }
     }
@@ -42,9 +39,12 @@ public class CommHandler extends SimpleChannelInboundHandler<String> {
         if(AUTH_OUT.name().equals(command)){
             ctx.channel().close().syncUninterruptibly();
             ctx.channel().closeFuture();
-            return;
+        } else if(PROFILE_REQ.name().equals(command)){
+            ctx.channel().writeAndFlush(user);
+        } else {
+            workWithCommand(command);
         }
-        workWithCommand(command);
+
     }
 
     @Override
@@ -73,44 +73,11 @@ public class CommHandler extends SimpleChannelInboundHandler<String> {
                 worker.removeFile(tokens[1]);
                 context.channel().writeAndFlush(context.alloc().heapBuffer(1).writeByte(0));
             }
-        } else if (command.contains("touch")) {
-            tokens = command.split(" ");
+        } else if (command.contains(FILE_SEARCH.name())) {
+            tokens = command.split(" ", 2);
             if (tokens.length > 1) {
-                worker.touchFile(tokens[1]);
+                worker.searchFile(tokens[1]);
             }
-        } else if (command.contains("cat")) {
-            tokens = command.split(" ");
-            if (tokens.length > 1) {
-                worker.catFile(tokens[1]);
-            }
-        } else if (command.contains("copy")) {
-            tokens = command.split(" ");
-            if (tokens.length > 2) {
-                worker.copyFile(tokens[1], tokens[2]);
-            }
-        }
-    }
-
-//    private void sendString (String s, ChannelHandlerContext ctx){
-//        ByteBuf bb = ctx.alloc().heapBuffer();
-//        bb.writeInt(0).writeInt(s.length()).writeBytes(s.getBytes());
-//        try {
-//            ctx.channel().writeAndFlush(bb).sync();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    private void sendObject(Object o, ChannelHandlerContext ctx){
-        ByteBuf bb = ctx.alloc().heapBuffer();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream ous = new ObjectOutputStream(bos);
-            ous.writeObject(o);
-            bb.writeInt(0).writeInt(bos.size()).writeBytes(bos.toByteArray());
-            ctx.writeAndFlush(bb);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

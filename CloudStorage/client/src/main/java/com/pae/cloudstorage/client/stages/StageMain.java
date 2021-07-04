@@ -7,10 +7,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import static com.pae.cloudstorage.client.stages.WindowURL.MAIN;
+
 public class StageMain extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
+        FXMLLoader loader = new FXMLLoader(MAIN.url());
         Parent root = loader.load();
         primaryStage.setTitle("Cloud storage");
         primaryStage.setScene(new Scene(root));

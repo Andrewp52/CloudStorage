@@ -50,15 +50,4 @@ public class User implements Serializable {
     public long getQuota() {
         return quota;
     }
-
-    // This toString is compatible for transfer to client.
-    @Override
-    public String toString() {
-        return new StringJoiner(" ", "<PROFILE>", "")
-                .add(nick)
-                .add(firstName)
-                .add(lastName)
-                .add(email)
-                .add(String.valueOf(quota)).toString();
-    }
 }

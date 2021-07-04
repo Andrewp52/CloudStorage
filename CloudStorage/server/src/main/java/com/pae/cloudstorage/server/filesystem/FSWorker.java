@@ -1,4 +1,8 @@
-package com.pae.cloudstorage.common;
+package com.pae.cloudstorage.server.filesystem;
+
+import com.pae.cloudstorage.common.CallBack;
+import com.pae.cloudstorage.common.FSObject;
+import com.pae.cloudstorage.server.ConfigReader;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -10,15 +14,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-// Class for disk operations.
+// Class for filesystem operations.
 // Needs Callback implementation.
 
-public class DiskWorker {
+public class FSWorker {
+    static Path SRVROOT;
+    Path usrRoot;
     Path location;
     CallBack callBack;
-
-    public DiskWorker(CallBack callBack) {
+    static {
+        try {
+            SRVROOT = Path.of(ConfigReader.readConfFile("/netserver.conf").get("srvroot"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public FSWorker(String nick, CallBack callBack) throws IOException {
         this.callBack = callBack;
+        this.usrRoot = SRVROOT.resolve(Path.of(nick));
+        if(!Files.exists(usrRoot)){
+            Files.createDirectory(SRVROOT.resolve(Path.of(nick)));
+        }
+        location = usrRoot;
     }
 
     public Path getLocation() {
@@ -29,20 +46,28 @@ public class DiskWorker {
         this.location = location;
     }
 
-    public void getFilesList() {
-        List<FSObject> fList = new ArrayList<>();
-        if(location == null){
-            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d)));
+    public void changeUserRoot(String newNick) throws IOException {
+        Path newRoot = SRVROOT.resolve(Path.of(newNick));
+        if(!Files.exists(newRoot)){
+            Files.move(usrRoot, newRoot, StandardCopyOption.ATOMIC_MOVE);
+            this.location = newRoot;
+            callBack.call("ok\n");
         } else {
-            try{
-                Stream<Path> sp = Files.list(location);
-                sp.forEach(path -> fList.add(new FSObject(path)));
-                sp.close();
-            } catch (IOException e){
-                e.printStackTrace();
-            }
+            callBack.call("nickname is occupied\n");
         }
-        callBack.call(fList);
+    }
+
+    public void getFilesList(){
+        List<FSObject> dirList = new ArrayList<>();
+        Stream<Path> sp = null;
+        try {
+            sp = Files.list(location);
+            sp.forEach(path -> dirList.add(new FSObject(path)));
+            sp.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        callBack.call(dirList);
     }
 
     // Creates new file with given name
@@ -71,15 +96,18 @@ public class DiskWorker {
     // Changes client`s location directory (goes back up to client`s root directory)
     // Calls getFilesList at and for client`s list (remote) update
 
-    public void changeDirectory(String dir) {
+    public void changeDirectory(String dir){
         Path current = location;
-        if(location != null){
-            if("..".equals(dir)){
+        if("..".equals(dir)){
+            if(!current.equals(usrRoot)){
                 location = current.getParent();
-            } else if("~".equals(dir)){
-                location = null;
-            } else {
-                location = location.resolve(dir);
+            }
+        } else if("~".equals(dir)){
+            location = usrRoot;
+        } else {
+            Path newLocation = Path.of(dir);
+            if(Files.exists(newLocation)){
+                location = newLocation;
             }
         }
         getFilesList();
@@ -122,7 +150,33 @@ public class DiskWorker {
         callBack.call(ans);
     }
 
-    // Copies file or directory (with inner content)
+    public void searchFile(String name) {
+        List<FSObject> found = new ArrayList<>();
+        try {
+            Files.walkFileTree(location, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (dir.getFileName().toString().equals(name)) {
+                        found.add(new FSObject(dir));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (file.getFileName().equals(name)) {
+                        found.add(new FSObject(file));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        callBack.call(found);
+    }
+
+        // Copies file or directory (with inner content)
     public void copyFile(String name, String dest){
         Path src = location.resolve(name);
         Path dst = location.resolve(dest);

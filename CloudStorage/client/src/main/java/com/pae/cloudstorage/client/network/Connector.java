@@ -26,38 +26,25 @@ public class Connector {
 
     // Sends request to remote server expecting Object answer.
     public void requestObject(Command cmd, String arg, CallBack callBack){
-        try {
-            out.write((cmd.name() + arg).getBytes());
-            ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
-            ObjectInputStream ois = new ObjectInputStream(bis);
-            callBack.call(ois.readObject());
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        callBack.call(requestObjectDirect(cmd, arg));
     }
 
     public void requestObject(Command cmd, CallBack callBack){
         requestObject(cmd, "", callBack);
     }
 
-    // Sends request to remote server expecting string answer.
-    public void requestString(Command cmd, String arg, CallBack callBack){
-        if(cmd.equals(AUTH_OUT)){
-            stop();
-            return;
-        }
-        String res = null;
-        try{
-            out.write((cmd.name() + arg).getBytes());
-            res = new String(getBytesFromInput(), StandardCharsets.UTF_8);
-        } catch (IOException e){
+    public Object requestObjectDirect(Command cmd, String arg){
+        Object o = null;
+        String command = arg == null || arg.isBlank()? cmd.name() : cmd.name() + " " + arg;
+        try {
+            out.write((command).getBytes());
+            ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
+            ObjectInputStream ois = new ObjectInputStream(bis);
+            o = ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        callBack.call(res);
-    }
-
-    public void requestString(Command cmd, CallBack callBack){
-        requestString(cmd, "", callBack);
+        return o;
     }
 
     // Reading byte array fom input stream
@@ -95,7 +82,7 @@ public class Connector {
     // Awaiting single byte for handling confirmation
     public void requestNoCallBack(Command cmd, String arg) {
         try {
-            out.writeUTF(cmd.name() + arg);
+            out.writeUTF(cmd.name() + " " + arg);
             in.readByte();
         } catch (IOException e) {
             e.printStackTrace();

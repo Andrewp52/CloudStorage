@@ -21,7 +21,7 @@ import static com.pae.cloudstorage.common.Command.*;
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
         String command = s.replace("\n", "").replace("\r", "");
         if(AUTH_OUT.name().equals(command)){
-            sendString(AUTH_OUT.name(), ctx);
+            ctx.channel().writeAndFlush(AUTH_OUT.name());
             ctx.channel().close().syncUninterruptibly();
             ctx.channel().closeFuture();
             return;
@@ -29,24 +29,14 @@ import static com.pae.cloudstorage.common.Command.*;
             User u = auth(null, null);
             if(u != null){
                 ctx.channel().pipeline().addAfter("AUTH", "CMD", new CommHandler(u));
-                sendString(AUTH_OK.name(), ctx);
+                ctx.channel().writeAndFlush(AUTH_OK.name());
             } else {
-                sendString(AUTH_FAIL.name(), ctx);
+                ctx.channel().writeAndFlush(AUTH_FAIL.name());
             }
         }
     }
 
     private User auth(String login, String pass){
         return new User(0, "aaa", "bbb", "ccc", "", "aaa", 200000000);
-    }
-
-    private void sendString (String s, ChannelHandlerContext ctx){
-        ByteBuf bb = ctx.alloc().heapBuffer();
-        bb.writeInt(0).writeInt(s.length()).writeBytes(s.getBytes());
-        try {
-            ctx.channel().writeAndFlush(bb).sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
