@@ -4,6 +4,7 @@ module client {
     requires javafx.fxml;
     requires javafx.base;
     requires io.netty.all;
+    requires common;
 
     exports com.pae.cloudstorage.client.controllers;
     opens com.pae.cloudstorage.client.stages;

@@ -19,16 +19,16 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="400.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerMain">
+<AnchorPane prefHeight="400.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerMain">
    <children>
-      <VBox layoutX="250.0" layoutY="100.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox fx:id="container" layoutX="250.0" layoutY="100.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <MenuBar>
               <menus>
                 <Menu mnemonicParsing="false" text="File">
                   <items>
                         <MenuItem mnemonicParsing="false" text="Edit profile" />
-                        <MenuItem mnemonicParsing="false" text="Log off" />
+                        <MenuItem mnemonicParsing="false" onAction="#logoff" text="Log off" />
                     <MenuItem mnemonicParsing="false" text="Close" />
                   </items>
                 </Menu>
@@ -72,13 +72,13 @@
                   <Insets left="15.0" />
                </padding>
             </HBox>
-            <SplitPane fx:id="splitPane" dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+            <SplitPane fx:id="splitPane" dividerPositions="0.5" VBox.vgrow="ALWAYS">
                <items>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                  <AnchorPane>
                      <children>
-                        <VBox fx:id="navRemote" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <VBox fx:id="navRemote" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <HBox prefHeight="100.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
                                  <children>
                                     <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
@@ -107,16 +107,7 @@
                                           <Tooltip text="Step back" />
                                        </tooltip>
                                     </Button>
-                                    <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
-                                       <graphic>
-                                          <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
-                                             <image>
-                                                <Image url="@../icons/search.png" />
-                                             </image>
-                                          </ImageView>
-                                       </graphic>
-                                    </Button>
-                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -127,6 +118,9 @@
                                        <HBox.margin>
                                           <Insets left="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Make new directory" />
+                                       </tooltip>
                                     </Button>
                                     <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
@@ -155,7 +149,7 @@
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -163,19 +157,38 @@
                                              </image>
                                           </ImageView>
                                        </graphic>
+                                       <tooltip>
+                                          <Tooltip text="Remove" />
+                                       </tooltip>
+                                       <HBox.margin>
+                                          <Insets right="5.0" />
+                                       </HBox.margin>
+                                    </Button>
+                                    <TextField fx:id="searchFieldRemote" onAction="#searchFile" HBox.hgrow="ALWAYS" />
+                                    <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" onAction="#searchFile" prefHeight="25.0" prefWidth="25.0">
+                                       <graphic>
+                                          <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../icons/search.png" />
+                                             </image>
+                                          </ImageView>
+                                       </graphic>
+                                       <HBox.margin>
+                                          <Insets right="5.0" />
+                                       </HBox.margin>
                                     </Button>
                                  </children>
                               </HBox>
-                              <ListView fx:id="remoteListView" layoutX="98.0" layoutY="62.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                              <ListView fx:id="remoteListView" layoutX="98.0" layoutY="62.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                      </children>
                   </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                  <AnchorPane>
                      <children>
-                        <VBox fx:id="navLocal" disable="true" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <VBox fx:id="navLocal" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <HBox prefHeight="100.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
                                  <children>
                                     <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
@@ -210,7 +223,7 @@
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -221,6 +234,9 @@
                                        <HBox.margin>
                                           <Insets left="5.0" />
                                        </HBox.margin>
+                                       <tooltip>
+                                          <Tooltip text="Make new directory" />
+                                       </tooltip>
                                     </Button>
                                     <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
@@ -249,7 +265,7 @@
                                           </ImageView>
                                        </graphic>
                                     </Button>
-                                    <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                                    <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
                                        <graphic>
                                           <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                              <image>
@@ -257,10 +273,29 @@
                                              </image>
                                           </ImageView>
                                        </graphic>
+                                       <tooltip>
+                                          <Tooltip text="Remove" />
+                                       </tooltip>
+                                       <HBox.margin>
+                                          <Insets right="5.0" />
+                                       </HBox.margin>
+                                    </Button>
+                                    <TextField fx:id="searchFieldLocal" onAction="#searchFile" HBox.hgrow="ALWAYS" />
+                                    <Button mnemonicParsing="false" onAction="#searchFile" prefHeight="25.0" prefWidth="25.0">
+                                       <graphic>
+                                          <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../icons/search.png" />
+                                             </image>
+                                          </ImageView>
+                                       </graphic>
+                                       <HBox.margin>
+                                          <Insets right="5.0" />
+                                       </HBox.margin>
                                     </Button>
                                  </children>
                               </HBox>
-                              <ListView fx:id="localListView" />
+                              <ListView fx:id="localListView" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                      </children>
