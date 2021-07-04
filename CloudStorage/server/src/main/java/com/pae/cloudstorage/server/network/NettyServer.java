@@ -16,6 +16,9 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
+/**
+ * NETTY server base class with standard configuration.
+ */
 public class NettyServer {
     private int PORT = Integer.parseInt(ConfigReader.readConfFile("/netserver.conf").get("port"));
     Logger logger = LogManager.getLogger(NettyServer.class);

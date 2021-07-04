@@ -2,7 +2,6 @@ package com.pae.cloudstorage.server.network.handlers;
 
 import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.data.DataService;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -28,7 +27,7 @@ import static com.pae.cloudstorage.common.Command.*;
         } else if(command.contains(AUTH_REQ.name())) {
             User u = auth(null, null);
             if(u != null){
-                ctx.channel().pipeline().addAfter("AUTH", "CMD", new CommHandler(u));
+                ctx.channel().pipeline().addAfter("AUTH", "CMD", new CommInHandler(u));
                 ctx.channel().writeAndFlush(AUTH_OK.name());
             } else {
                 ctx.channel().writeAndFlush(AUTH_FAIL.name());

@@ -3,6 +3,9 @@ package com.pae.cloudstorage.server.network.handlers;
 import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.filesystem.FSWorker;
 import io.netty.channel.*;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 
 import static com.pae.cloudstorage.common.Command.*;
@@ -16,11 +19,12 @@ import static com.pae.cloudstorage.common.Command.*;
  * and transfers there last command.
  * TODO: inmplement upload / download command handling.
  */
-public class CommHandler extends SimpleChannelInboundHandler<String> {
-    User user;
-    ChannelHandlerContext context;
-    FSWorker worker;
-    public CommHandler(User user) {
+public class CommInHandler extends SimpleChannelInboundHandler<String> {
+    private User user;
+    private ChannelHandlerContext context;
+    private FSWorker worker;
+    Logger logger = LogManager.getLogger(CommInHandler.class);
+    public CommInHandler(User user) {
         this.user = user;
     }
 
@@ -49,8 +53,8 @@ public class CommHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
+        logger.error("Command handler error: ", cause);
         ctx.channel().writeAndFlush(cause);
-        cause.printStackTrace();
     }
 
     private void workWithCommand(String command) throws IOException {
@@ -67,7 +71,7 @@ public class CommHandler extends SimpleChannelInboundHandler<String> {
             if (tokens.length > 1) {
                 worker.changeDirectory(tokens[1]);
             }
-        } else if (command.contains(FILE_REMOVE.name())) {
+        } else if (command.contains(FILE_REMOVE.name())) {          //TODO: REWORK IT !!!!
             tokens = command.split(" ");
             if (tokens.length > 1) {
                 worker.removeFile(tokens[1]);
