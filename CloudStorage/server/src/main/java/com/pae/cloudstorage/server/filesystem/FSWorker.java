@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.pae.cloudstorage.common.Command.CMD_FAIL;
+import static com.pae.cloudstorage.common.Command.CMD_SUCCESS;
+
 // Class for filesystem operations.
 // Needs Callback implementation.
 
@@ -118,7 +121,9 @@ public class FSWorker {
         Path p = location.resolve(name);
         try {
             Files.delete(p);
+            callBack.call(CMD_SUCCESS);
         } catch (IOException e) {
+            callBack.call(CMD_FAIL);
             e.printStackTrace();
         }
     }

@@ -71,11 +71,10 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             if (tokens.length > 1) {
                 worker.changeDirectory(tokens[1]);
             }
-        } else if (command.contains(FILE_REMOVE.name())) {          //TODO: REWORK IT !!!!
+        } else if (command.contains(FILE_REMOVE.name())) {
             tokens = command.split(" ");
             if (tokens.length > 1) {
                 worker.removeFile(tokens[1]);
-                context.channel().writeAndFlush(context.alloc().heapBuffer(1).writeByte(0));
             }
         } else if (command.contains(FILE_SEARCH.name())) {
             tokens = command.split(" ", 2);

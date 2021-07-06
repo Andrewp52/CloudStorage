@@ -17,6 +17,7 @@ public class StageMain extends Application {
         primaryStage.setTitle("Cloud storage");
         primaryStage.setScene(new Scene(root));
         primaryStage.sizeToScene();
+        primaryStage.setMinWidth(900);
         primaryStage.setOnCloseRequest(event -> {
             ControllerMain controller = loader.getController();
             controller.stop();

@@ -14,7 +14,7 @@ public class Connector {
     private DataOutputStream out;
     private DataInputStream in;
 
-    public Connector() {
+    public void start(){
         try {
             socket = new Socket(host, port);
             in = new DataInputStream(socket.getInputStream());
@@ -27,10 +27,6 @@ public class Connector {
     // Sends request to remote server expecting Object answer.
     public void requestObject(Command cmd, String arg, CallBack callBack){
         callBack.call(requestObjectDirect(cmd, arg));
-    }
-
-    public void requestObject(Command cmd, CallBack callBack){
-        requestObject(cmd, "", callBack);
     }
 
     public Object requestObjectDirect(Command cmd, String arg){
@@ -80,14 +76,4 @@ public class Connector {
         return (socket != null && !socket.isClosed()) && (in != null && out != null);
     }
 
-    // Sends request to remote server without any results required.
-    // Awaiting single byte for handling confirmation
-    public void requestNoCallBack(Command cmd, String arg) {
-        try {
-            out.writeUTF(cmd.name() + " " + arg);
-            in.readByte();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

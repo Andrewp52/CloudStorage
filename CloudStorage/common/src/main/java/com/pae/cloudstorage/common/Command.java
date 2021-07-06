@@ -23,5 +23,8 @@ public enum Command {
     FILE_MKDIR,
     FILE_REMOVE,
     FILE_COPY,
-    FILE_SEARCH
+    FILE_SEARCH,
+
+    CMD_SUCCESS,
+    CMD_FAIL;
 }

@@ -6,16 +6,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FSObject implements Serializable {
-    String name;
-    String path;
-    boolean isDirectory;
-    long size;
+   private String name;
+   private String path;
+   private String type;
+   private Boolean isDirectory;
+   private long size;
 
-    public FSObject(String name, String path, boolean isDirectory) {
-        this.name = name;
-        this.path = path;
-        this.isDirectory = isDirectory;
-    }
+//    public FSObject(String name, String path, boolean isDirectory) {
+//        this.name = name;
+//        this.path = path;
+//        this.isDirectory = isDirectory;
+//    }
 
     public FSObject(Path p) {
         if(p.getFileName() == null){
@@ -29,6 +30,8 @@ public class FSObject implements Serializable {
         if(!isDirectory){
             try {
                 size = Files.size(p);
+                type = Files.probeContentType(p);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -43,7 +46,15 @@ public class FSObject implements Serializable {
         return path;
     }
 
-    public boolean isDirectory() {
+    public long getSize() {
+        return size;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Boolean isDirectory() {
         return isDirectory;
     }
 
