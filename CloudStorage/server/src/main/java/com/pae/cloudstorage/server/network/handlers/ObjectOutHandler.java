@@ -19,7 +19,7 @@ import java.io.ObjectOutputStream;
  * Regular Socket read operations compatible.
  */
 public class ObjectOutHandler extends ChannelOutboundHandlerAdapter {
-
+    
     Logger logger = LogManager.getLogger(ObjectOutHandler.class);
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {

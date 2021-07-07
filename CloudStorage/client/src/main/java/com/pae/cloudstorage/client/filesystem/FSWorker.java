@@ -3,12 +3,8 @@ package com.pae.cloudstorage.client.filesystem;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.*;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -96,63 +92,24 @@ public class FSWorker {
         }
     }
 
-    // Reads content of a given file
-//    public void catFile(String name) throws IOException {
-//        Path p = location.resolve(name);
-//        String ans;
-//        try {
-//            if(!Files.exists(p) || Files.isDirectory(p)){
-//                throw new NoSuchFileException("invalid filename");
-//            }
-//            StringBuilder sb = new StringBuilder();
-//            FileChannel fc = new RandomAccessFile(p.toString(), "r").getChannel();
-//            ByteBuffer buffer = ByteBuffer.allocate(12);
-//
-//            while (fc.read(buffer) >=0){
-//                buffer.flip();
-//                while (buffer.hasRemaining()){
-//                    sb.append((char) buffer.get());
-//                }
-//                buffer.rewind();
-//            }
-//            fc.close();
-//            ans = sb.toString();
-//        } catch (NoSuchFileException e){
-//            ans = "invalid filename";
-//        }
-//        callBack.call(ans);
-//    }
+    public void writeFromConnectorStream(DataInputStream in, FSObject source, String path, CallBack callBack){
+        File f = new File(path + File.separator + source.getName());
+        try (FileOutputStream fos = new FileOutputStream(f, false)){
+            f.createNewFile();
+            Long size = source.getSize();
+            Long totalRead = 0L;
+            byte[] buffer = new byte[8 * 1024];
 
-    // Copies file or directory (with inner content)
-//    public void copyFile(String name, String dest){
-//        Path src = location.resolve(name);
-//        Path dst = location.resolve(dest);
-//        String ans = "ok\n";
-//        try {
-//            if(Files.isDirectory(src)){
-//                Files.walkFileTree(src, new SimpleFileVisitor<Path>(){
-//                    @Override
-//                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-//                        Files.createDirectories(dst.resolve(src.relativize(dir)));
-//                        return FileVisitResult.CONTINUE;
-//                    }
-//
-//                    @Override
-//                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                        Files.copy(file, dst.resolve(src.relativize(file)));
-//                        return FileVisitResult.CONTINUE;
-//                    }
-//                });
-//            } else {
-//                if(Files.isDirectory(dst)){
-//                    Files.copy(src, dst.resolve(location.relativize(src)));
-//                } else {
-//                    Files.copy(src, dst);
-//                }
-//            }
-//        } catch (IOException e){
-//            ans = "Copy error: " + e.getMessage() + "\n";
-//        }
-//        callBack.call(ans);
-//    }
+            while (totalRead < size){
+                int read = in.read(buffer);
+                fos.write(buffer, 0, read);
+                totalRead += read;
+                callBack.call(totalRead.doubleValue() / size.doubleValue());
+            }
+            fos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

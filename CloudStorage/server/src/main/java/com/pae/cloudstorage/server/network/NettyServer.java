@@ -33,8 +33,7 @@ public class NettyServer {
                         protected void initChannel(SocketChannel ch){
                             ch.pipeline()
                                     .addLast("STRDEC", new StringDecoder())
-                                    .addLast("AUTH", new AuthHandler())
-                                    .addLast("OBJOUT", new ObjectOutHandler());
+                                    .addLast("AUTH", new AuthHandler());
                         }
                     });
             ChannelFuture future = bs.bind(PORT).sync();

@@ -18,7 +18,7 @@ import java.util.List;
  * beyond controller. Represents list of FSObjects as Table with 3 columns
  * and ImageView icons for names depends on isDirectory field.
  */
-//TODO: Засунуть его в какой-нибудь подходящий пакедж.
+//TODO: solve sorting issues. Засунуть его в какой-нибудь подходящий пакедж.
 public class FSTableViewPresentation {
     public static void updateTable(TableView tw, List<FSObject> rList){
         ObservableList<FSObject> lst = FXCollections.observableArrayList(rList);

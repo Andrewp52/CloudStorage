@@ -4,8 +4,7 @@ import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.server.ConfigReader;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
@@ -212,5 +211,9 @@ public class FSWorker {
             ans = "Copy error: " + e.getMessage() + "\n";
         }
         callBack.call(ans);
+    }
+
+    public File getFile(String name) {
+        return new File(location.resolve(Path.of(name)).toString());
     }
 }

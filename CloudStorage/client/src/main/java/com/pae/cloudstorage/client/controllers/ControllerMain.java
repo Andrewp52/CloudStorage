@@ -4,6 +4,7 @@ import com.pae.cloudstorage.client.FSTableViewPresentation;
 import com.pae.cloudstorage.client.filesystem.FSWorker;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.StageDialog;
+import com.pae.cloudstorage.client.stages.StageProcessing;
 import com.pae.cloudstorage.common.Command;
 import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.common.User;
@@ -40,6 +41,7 @@ public class ControllerMain implements Initializable {
     @FXML public Label statusLabel;
     @FXML public PasswordField passwordField;
     @FXML public TextField loginField;
+    @FXML public ProgressBar progressBar;
 
     private Connector connector = new Connector();
     private FSWorker fsWorker;
@@ -112,6 +114,7 @@ public class ControllerMain implements Initializable {
         }
     }
 
+    // Switches form controls (on / off)
     private void switchControls(boolean enable){
         navLocal.disableProperty().setValue(!enable);
         navRemote.disableProperty().setValue(!enable);
@@ -123,8 +126,7 @@ public class ControllerMain implements Initializable {
     }
 
     // Received message handler
-    // When first run and auth is ok, sends initial "ls" to server
-    // TODO: think about message handling not here/
+    // At first run, if auth is ok, enables controls and updates files lists.
     private void authReceived(String msg) {
         if(msg.equals(AUTH_OK.name())){
             user = (User) connector.requestObjectDirect(PROFILE_REQ, null);
@@ -185,6 +187,7 @@ public class ControllerMain implements Initializable {
         }
     }
 
+    // Deletes selected file(s)
     public void removeSelected(ActionEvent event) {
         if(isLocalPanelAction(event)){
             new StageDialog(
@@ -215,6 +218,7 @@ public class ControllerMain implements Initializable {
         }
     }
 
+    // Searches given name (On remote - from user root, local - from current position)
     public void searchFile(ActionEvent event) {
         if(isLocalPanelAction(event)){
 
@@ -225,18 +229,38 @@ public class ControllerMain implements Initializable {
     }
 
     // Checks Event`s parent to find out is it local or remote panel.
+    // Because of Context menu is not child of Node there is special check here.
     public boolean isLocalPanelAction(Event event){
         if(event instanceof ActionEvent){
-            return "navLocal".equals(((Node) event.getSource()).getParent().getParent().getId());
+            if(event.getSource() instanceof MenuItem) {
+                ContextMenu cm = ((MenuItem)event.getSource()).getParentPopup();
+                return cm.getId().contains("local");
+            } else {
+                return "navLocal".equals(((Node) event.getSource()).getParent().getParent().getId());
+            }
         } else {
             return "navLocal".equals(((Node) event.getSource()).getParent().getId());
         }
-
     }
 
-    public void logoff(ActionEvent event) {
-        stop();
-        switchControls(false);
+    // Downloads selected files
+    //TODO: implement multiple selection download
+    public void downloadSelected() {
+        FSObject source = (FSObject) remoteFilesTableView.getSelectionModel().getSelectedItem();
+        String dest = fsWorker.getLocation().toAbsolutePath().toString();
+        StageProcessing sp = new StageProcessing(
+                FILE_DOWNLOAD,
+                source,
+                dest,
+                fsWorker,
+                connector,
+                args -> Platform.runLater(() -> updateLocalList(fsWorker.getFilesList()))
+        );
+        sp.show();
+    }
+
+    public void uploadSelected(ActionEvent event) {
+        //TODO: implement upload
     }
 
     // Closes connection.
@@ -244,4 +268,9 @@ public class ControllerMain implements Initializable {
         connector.stop();
     }
 
+    // Logging off from server without closing application
+    public void logoff(ActionEvent event) {
+        stop();
+        switchControls(false);
+    }
 }

@@ -2,10 +2,12 @@ package com.pae.cloudstorage.client.network;
 
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
+import com.pae.cloudstorage.common.FSObject;
+
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import static com.pae.cloudstorage.common.Command.AUTH_OUT;
+import static com.pae.cloudstorage.common.Command.FILE_DOWNLOAD;
 
 public class Connector {
     private final String host = "localhost";
@@ -41,6 +43,16 @@ public class Connector {
             e.printStackTrace();
         }
         return o;
+    }
+
+    public DataInputStream getDownloadStream(FSObject source){
+        try {
+            out.write((FILE_DOWNLOAD.name() + " " + source.getName()).getBytes());
+            return in;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // Reading byte array fom input stream

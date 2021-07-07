@@ -6,8 +6,8 @@ public enum WindowURL {
     MAIN("/fxml/MainWindow.fxml"),
     MAKEDIR("/fxml/MakeDirDialog.fxml"),
     DELETE("/fxml/DeleteDialog.fxml"),
-    PROFILE("/fxml/ProfileDialog.fxml");
-
+    PROFILE("/fxml/ProfileDialog.fxml"),
+    PROCESSING("/fxml/ProcessingPopup.fxml");
     String s;
     WindowURL(String s) {
         this.s = s;

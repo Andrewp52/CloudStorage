@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="350.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerProcessing">
+   <children>
+      <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <Label fx:id="operationLabel">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin>
+            </Label>
+            <ProgressBar fx:id="progressBar" prefWidth="320.0" progress="0.0">
+               <VBox.margin>
+                  <Insets left="10.0" top="15.0" />
+               </VBox.margin>
+            </ProgressBar>
+            <Label fx:id="statusLabel">
+               <VBox.margin>
+                  <Insets left="10.0" top="10.0" />
+               </VBox.margin>
+            </Label>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
