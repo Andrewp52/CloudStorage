@@ -33,7 +33,7 @@ public class ObjectOutHandler extends ChannelOutboundHandlerAdapter {
             bb.release();
             ctx.flush();
         } catch (IOException e) {
-            logger.error("Object outbound handler error: ", e);
+            logger.error("Object sending error: ", e);
         }
     }
 }

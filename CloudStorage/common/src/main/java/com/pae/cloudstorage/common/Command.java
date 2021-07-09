@@ -24,6 +24,7 @@ public enum Command {
     FILE_REMOVE,
     FILE_COPY,
     FILE_SEARCH,
+    FILE_PATHS,
 
     CMD_SUCCESS,
     CMD_FAIL;

@@ -15,6 +15,6 @@ public class FileSenderHandler extends ChunkedWriteHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error("File senderHandler error: ", cause);
+        logger.error("File sending error: ", cause);
     }
 }

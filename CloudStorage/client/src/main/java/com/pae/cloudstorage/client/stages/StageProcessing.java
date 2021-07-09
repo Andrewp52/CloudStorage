@@ -1,8 +1,7 @@
 package com.pae.cloudstorage.client.stages;
 
 import com.pae.cloudstorage.client.controllers.ControllerProcessing;
-import com.pae.cloudstorage.client.filesystem.FSWorker;
-import com.pae.cloudstorage.client.network.Connector;
+import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
 import com.pae.cloudstorage.common.FSObject;
@@ -12,8 +11,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
-import static com.pae.cloudstorage.common.Command.FILE_DOWNLOAD;
+import java.util.List;
 
 /**
  * Base Stage for files processing
@@ -22,20 +20,15 @@ import static com.pae.cloudstorage.common.Command.FILE_DOWNLOAD;
  */
 
 public class StageProcessing extends Stage {
-
     Command command;
-    FSObject source;
-    String destPath;
-    FSWorker worker;
-    Connector connector;
+    List<FSObject> sources;
+    StorageWorker localWorker;
+    StorageWorker remoteWorker;
     CallBack callBack;
-    public StageProcessing(Command command, FSObject source, String destPath, FSWorker worker, Connector connector, CallBack callBack) {
+    public StageProcessing(Command command, List<FSObject> sources, CallBack callBack) {
         this.command = command;
-        this.source = source;
-        this.destPath = destPath;
-        this.worker = worker;
-        this.connector = connector;
         this.callBack = callBack;
+        this.sources = sources;
         init();
     }
 
@@ -44,20 +37,19 @@ public class StageProcessing extends Stage {
         try {
             Parent root = loader.load();
             setScene(new Scene(root));
-            if(FILE_DOWNLOAD.equals(command)){
-                setTitle("Download");
-            } else {
-                setTitle("Upload");
+            switch (command){
+                case FILE_DOWNLOAD: setTitle("Download");   break;
+                case FILE_UPLOAD: setTitle("Upload");       break;
+                case FILE_REMOVE: setTitle("Remove");       break;
+                case FILE_COPY: setTitle("Copy");           break;
             }
             sizeToScene();
-
             setOnShowing(event -> {
                 ControllerProcessing c = loader.getController();
                 c.setParams();
-                if(FILE_DOWNLOAD.equals(command)){
-                    c.download();
-                } else {
-                    c.upload();
+                switch (command){
+                    case FILE_DOWNLOAD: c.download(sources);   break;
+                    case FILE_UPLOAD: c.upload(sources);       break;
                 }
             });
 
@@ -66,20 +58,20 @@ public class StageProcessing extends Stage {
         }
     }
 
-    public FSObject getSource() {
-        return source;
+    public void setLocalWorker(StorageWorker localWorker) {
+        this.localWorker = localWorker;
     }
 
-    public String getDestPath() {
-        return destPath;
+    public void setRemoteWorker(StorageWorker remoteWorker) {
+        this.remoteWorker = remoteWorker;
     }
 
-    public FSWorker getWorker() {
-        return worker;
+    public StorageWorker getLocalWorker() {
+        return localWorker;
     }
 
-    public Connector getConnector() {
-        return connector;
+    public StorageWorker getRemoteWorker() {
+        return remoteWorker;
     }
 
     public CallBack getCallBack() {

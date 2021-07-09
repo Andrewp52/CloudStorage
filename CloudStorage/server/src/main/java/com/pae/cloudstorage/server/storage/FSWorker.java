@@ -1,8 +1,8 @@
-package com.pae.cloudstorage.server.filesystem;
+package com.pae.cloudstorage.server.storage;
 
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
-import com.pae.cloudstorage.server.ConfigReader;
+import com.pae.cloudstorage.server.Main;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -20,16 +20,12 @@ import static com.pae.cloudstorage.common.Command.CMD_SUCCESS;
 // Needs Callback implementation.
 
 public class FSWorker {
-    static Path SRVROOT;
-    Path usrRoot;
-    Path location;
-    CallBack callBack;
+    private static final Path SRVROOT;
+    private Path usrRoot;
+    private Path location;
+    private CallBack callBack;
     static {
-        try {
-            SRVROOT = Path.of(ConfigReader.readConfFile("/netserver.conf").get("srvroot"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        SRVROOT = Path.of(Main.getSrvConfig().get("srvroot"));
     }
     public FSWorker(String nick, CallBack callBack) throws IOException {
         this.callBack = callBack;
@@ -64,7 +60,7 @@ public class FSWorker {
         Stream<Path> sp = null;
         try {
             sp = Files.list(location);
-            sp.forEach(path -> dirList.add(new FSObject(path)));
+            sp.forEach(path -> dirList.add(new FSObject(path, location)));
             sp.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -107,7 +103,7 @@ public class FSWorker {
         } else if("~".equals(dir)){
             location = usrRoot;
         } else {
-            Path newLocation = Path.of(dir);
+            Path newLocation = location.resolve(dir);
             if(Files.exists(newLocation)){
                 location = newLocation;
             }
@@ -161,7 +157,7 @@ public class FSWorker {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     if (dir.getFileName().toString().equals(name)) {
-                        found.add(new FSObject(dir));
+                        found.add(new FSObject(dir, location));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -169,7 +165,7 @@ public class FSWorker {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (file.getFileName().equals(name)) {
-                        found.add(new FSObject(file));
+                        found.add(new FSObject(file, location));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -180,7 +176,7 @@ public class FSWorker {
         callBack.call(found);
     }
 
-        // Copies file or directory (with inner content)
+    // Copies file or directory (with inner content)
     public void copyFile(String name, String dest){
         Path src = location.resolve(name);
         Path dst = location.resolve(dest);
@@ -215,5 +211,28 @@ public class FSWorker {
 
     public File getFile(String name) {
         return new File(location.resolve(Path.of(name)).toString());
+    }
+
+    // Retrieves all files and directories info from given directory
+    public void getDirectoryPaths(String token) {
+        List<FSObject> list = new ArrayList<>();
+        try {
+            Files.walkFileTree(location.resolve(token), new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    list.add(new FSObject(dir, location));
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    list.add(new FSObject(file, location));
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            callBack.call(list);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

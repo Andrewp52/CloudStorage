@@ -12,19 +12,14 @@ public class FSObject implements Serializable {
    private Boolean isDirectory;
    private long size;
 
-//    public FSObject(String name, String path, boolean isDirectory) {
-//        this.name = name;
-//        this.path = path;
-//        this.isDirectory = isDirectory;
-//    }
-
-    public FSObject(Path p) {
+    public FSObject(Path p, Path location) {
         if(p.getFileName() == null){
             name = p.getRoot().toString();
+            path = name;
             isDirectory = true;
         } else {
             name = p.getFileName().toString();
-            path = p.toString();
+            path = location.relativize(p).toString();
             isDirectory = Files.isDirectory(p);
         }
         if(!isDirectory){
@@ -36,6 +31,10 @@ public class FSObject implements Serializable {
                 e.printStackTrace();
             }
         }
+    }
+
+    public FSObject getObject(){
+        return this;
     }
 
     public String getName() {
@@ -56,10 +55,5 @@ public class FSObject implements Serializable {
 
     public Boolean isDirectory() {
         return isDirectory;
-    }
-
-    @Override
-    public String toString() {
-        return (isDirectory? "<D>" : "") + name;
     }
 }

@@ -1,17 +1,14 @@
 package com.pae.cloudstorage.server.network.handlers;
 
 import com.pae.cloudstorage.common.User;
-import com.pae.cloudstorage.server.filesystem.FSWorker;
+import com.pae.cloudstorage.server.storage.FSWorker;
 import io.netty.channel.*;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import static com.pae.cloudstorage.common.Command.*;
 
@@ -92,6 +89,9 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             if (tokens.length > 1) {
                 worker.searchFile(tokens[1]);
             }
+        } else if(command.contains(FILE_PATHS.name())){
+            tokens = command.split(" ", 2);
+            worker.getDirectoryPaths(tokens[1]);
         }
     }
 

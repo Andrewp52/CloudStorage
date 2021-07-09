@@ -10,6 +10,7 @@ import static com.pae.cloudstorage.common.Command.AUTH_OUT;
 import static com.pae.cloudstorage.common.Command.FILE_DOWNLOAD;
 
 public class Connector {
+    private final String DELIM = "$_";
     private final String host = "localhost";
     private final int port = 9999;
     private Socket socket;
@@ -33,7 +34,7 @@ public class Connector {
 
     public Object requestObjectDirect(Command cmd, String arg){
         Object o = null;
-        String command = arg == null || arg.isBlank()? cmd.name() : cmd.name() + " " + arg;
+        String command = arg == null || arg.isBlank()? cmd.name() + DELIM : cmd.name() + " " + arg + DELIM;
         try {
             out.write((command).getBytes());
             ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
@@ -47,7 +48,7 @@ public class Connector {
 
     public DataInputStream getDownloadStream(FSObject source){
         try {
-            out.write((FILE_DOWNLOAD.name() + " " + source.getName()).getBytes());
+            out.write((FILE_DOWNLOAD.name() + " " + source.getPath() + DELIM).getBytes());
             return in;
         } catch (IOException e) {
             e.printStackTrace();
@@ -74,7 +75,7 @@ public class Connector {
     public void stop(){
         try {
             if(isConnectionAlive()){
-                out.write(AUTH_OUT.name().getBytes());
+                out.write((AUTH_OUT.name() + DELIM).getBytes());
                 out.flush();
                 socket.close();
             }

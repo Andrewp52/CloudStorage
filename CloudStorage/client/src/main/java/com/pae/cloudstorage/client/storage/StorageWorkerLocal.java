@@ -1,4 +1,4 @@
-package com.pae.cloudstorage.client.filesystem;
+package com.pae.cloudstorage.client.storage;
 
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 // Class for disk operations.
 // Needs Callback implementation.
 
-public class FSWorker {
+public class StorageWorkerLocal implements StorageWorker{
     Path location;
 
     public Path getLocation() {
@@ -23,14 +23,15 @@ public class FSWorker {
         this.location = location;
     }
 
+    @Override
     public List<FSObject> getFilesList() {
         List<FSObject> fList = new ArrayList<>();
         if(location == null){
-            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d)));
+            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d, location)));
         } else {
             try{
                 Stream<Path> sp = Files.list(location);
-                sp.forEach(path -> fList.add(new FSObject(path)));
+                sp.forEach(path -> fList.add(new FSObject(path, location)));
                 sp.close();
             } catch (IOException e){
                 e.printStackTrace();
@@ -39,33 +40,26 @@ public class FSWorker {
         return fList;
     }
 
-    // Creates new file with given name
-//    public void touchFile(String name) {
-//        String ans = String.format("%s created\n", name);
-//        try {
-//            Files.createFile(this.location.resolve(name));
-//        } catch (IOException e){
-//            ans = String.format("Can`t create file %s\n", name);
-//        }
-//        callBack.call(ans);
-//    }
+    @Override
+    public List<FSObject> searchFile(String name) {
+        return null;
+    }
 
     // Makes directory(ies) with given path.
-    public List<FSObject> mkdir(String dir) {
+    @Override
+    public void makeDirectory(String dir) {
         if(location != null){
             try {
                 Files.createDirectories(Path.of(this.location.toString(), dir));
-                return getFilesList();
             } catch (IOException e){
                 e.printStackTrace();
             }
         }
-        return null;
     }
 
     // Changes client`s location directory (goes back up to client`s root directory)
     // Calls getFilesList at and for client`s list (remote) update
-
+    @Override
     public void changeDirectory(String dir) {
         Path current = location;
         if(location != null){
@@ -74,15 +68,21 @@ public class FSWorker {
             } else if("~".equals(dir)){
                 location = null;
             } else {
-                Path newLocation = Path.of(dir);
+                Path newLocation = location.resolve(dir);
                 if(Files.exists(newLocation)){
                     location = newLocation;
                 }
+            }
+        } else if(!"..".equals(dir) && !"~".equals(dir)){
+            Path newLocation = Path.of(dir);
+            if(Files.exists(newLocation)){
+                location = newLocation;
             }
         }
     }
 
     // Removes file or directory (except of not empty directory) returns String - operation result.
+    @Override
     public void removeFile(String name) {
         Path p = location.resolve(name);
         try {
@@ -92,8 +92,19 @@ public class FSWorker {
         }
     }
 
-    public void writeFromConnectorStream(DataInputStream in, FSObject source, String path, CallBack callBack){
-        File f = new File(path + File.separator + source.getName());
+    @Override
+    public InputStream getStream(FSObject source) {
+        File f = new File(source.getPath());
+        try(FileInputStream fis = new FileInputStream(f)){
+            return fis;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack){
+        File f = new File(path + File.separator + source.getPath());
         try (FileOutputStream fos = new FileOutputStream(f, false)){
             f.createNewFile();
             Long size = source.getSize();
@@ -110,6 +121,11 @@ public class FSWorker {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<FSObject> getDirectoryPaths(FSObject source) {
+        return null;
     }
 
 }

@@ -1,35 +1,27 @@
 package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.FSTableViewPresentation;
-import com.pae.cloudstorage.client.filesystem.FSWorker;
+import com.pae.cloudstorage.client.storage.*;
 import com.pae.cloudstorage.client.network.Connector;
-import com.pae.cloudstorage.client.stages.StageDialog;
-import com.pae.cloudstorage.client.stages.StageProcessing;
-import com.pae.cloudstorage.common.Command;
-import com.pae.cloudstorage.common.FSObject;
-import com.pae.cloudstorage.common.User;
+import com.pae.cloudstorage.client.stages.*;
+import com.pae.cloudstorage.common.*;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.EventHandler;
+import javafx.event.*;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+
 
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 
 import static com.pae.cloudstorage.common.Command.*;
 import static com.pae.cloudstorage.client.stages.WindowURL.*;
-public class ControllerMain implements Initializable {
 
+public class ControllerMain implements Initializable {
     @FXML public TableView remoteFilesTableView;
     @FXML public TableView localFilesTableView;
     @FXML public TextField searchFieldLocal;
@@ -43,8 +35,9 @@ public class ControllerMain implements Initializable {
     @FXML public TextField loginField;
     @FXML public ProgressBar progressBar;
 
-    private Connector connector = new Connector();
-    private FSWorker fsWorker;
+    private final Connector connector = new Connector();
+    private final StorageWorker swLocal = new StorageWorkerLocal();
+    private final StorageWorker swRemote = new StorageWorkerRemote(connector);
     private User user;
     public void registerNewUser() {
         // TODO: user registration form execution
@@ -62,56 +55,39 @@ public class ControllerMain implements Initializable {
         remoteFilesTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         remoteFilesTableView.setPlaceholder(new Label("This directory is empty."));
         localFilesTableView.setPlaceholder(new Label("This directory is empty."));
-
-        fsWorker = new FSWorker();
+        FSTableViewPresentation.init(localFilesTableView);
+        FSTableViewPresentation.init(remoteFilesTableView);
 
         // Remote list mouse click handler
-        remoteFilesTableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if(event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() > 1) {
-                    if(remoteFilesTableView.getSelectionModel().getSelectedItem() != null) {
-                        handleItemClicked(remoteFilesTableView, event);
-                    }
-                } else if(event.getButton().equals(MouseButton.BACK)){
-                    goBack(event);
-                }
+        remoteFilesTableView.setOnMouseClicked(event -> {
+            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() > 1) {
+                handleItemClicked(remoteFilesTableView, event);
+            } else if (event.getButton().equals(MouseButton.BACK)) {
+                goBack(event);
             }
         });
         // Local list mouse click handler
         localFilesTableView.setOnMouseClicked(event -> {
             if(event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() > 1){
-                if(localFilesTableView.getSelectionModel().getSelectedItem() != null){
-                    handleItemClicked(localFilesTableView, event);
-                }
+                handleItemClicked(localFilesTableView, event);
             } else if(event.getButton().equals(MouseButton.BACK)){
                 goBack(event);
             }
         });
     }
 
-    // Calls by TableView onClick handler
-    // If is directory selected - changes current location on diskWorker or connector
-    // depends on particular side (local / remote)
-    private void handleItemClicked(TableView<FSObject> tableView, MouseEvent event) {
-        FSObject s = tableView.getSelectionModel().getSelectedItem();
-        if(s == null){
-            return;
-        }
-        if(isLocalPanelAction(event)) {
-            if (s.isDirectory()) {
-                if (fsWorker.getLocation() == null){
-                    fsWorker.setLocation(Path.of(s.getName()));
-                } else {
-                    fsWorker.changeDirectory(s.getPath());
-                }
-                updateLocalList(fsWorker.getFilesList());
-            }
-        } else {
-            if(s.isDirectory()){
-                connector.requestObject(FILE_CD, s.getPath(), (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
+    // Received message handler
+    // At first run, if auth is ok, enables controls and updates files lists.
+    private void authReceived(String msg) {
+        if(msg.equals(AUTH_OK.name())){
+            user = (User) connector.requestObjectDirect(PROFILE_REQ, null);
+            if(user != null){
+                switchControls(true);
+                updateFilesList(localFilesTableView, swLocal.getFilesList());
+                updateFilesList(remoteFilesTableView, swRemote.getFilesList());
             }
         }
+        statusLabel.setText(msg);
     }
 
     // Switches form controls (on / off)
@@ -125,44 +101,50 @@ public class ControllerMain implements Initializable {
         }
     }
 
-    // Received message handler
-    // At first run, if auth is ok, enables controls and updates files lists.
-    private void authReceived(String msg) {
-        if(msg.equals(AUTH_OK.name())){
-            user = (User) connector.requestObjectDirect(PROFILE_REQ, null);
-            if(user != null){
-                switchControls(true);
-                updateLocalList(fsWorker.getFilesList());
-                connector.requestObject(FILE_LIST, null, (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
+    // Updates given TableView wiyh given StorageWorker
+
+    private void updateFilesList(TableView target, List<FSObject> list){
+        FSTableViewPresentation.updateTable(target, list);
+    }
+
+    // Calls by TableView onClick handler
+    // If is directory selected - changes current location on diskWorker or connector
+    // depends on particular side (local / remote)
+    private void handleItemClicked(TableView<FSObject> tableView, MouseEvent event) {
+        FSObject s = tableView.getSelectionModel().getSelectedItem();
+        if(s == null){
+            return;
+        }
+        if(isLocalPanelAction(event)) {
+            if (s.isDirectory()) {
+                swLocal.changeDirectory(s.getName());
+                updateFilesList(localFilesTableView, swLocal.getFilesList());
+            }
+        } else {
+            if(s.isDirectory()){
+                swRemote.changeDirectory(s.getName());
+                updateFilesList(remoteFilesTableView, swRemote.getFilesList());
             }
         }
-        statusLabel.setText(msg);
-    }
-
-    private void updateRemoteList(Object o){
-        List<FSObject> rList = (List<FSObject>) o;
-        FSTableViewPresentation.updateTable(remoteFilesTableView, rList);
-    }
-
-    private void updateLocalList(List<FSObject> fList){
-        FSTableViewPresentation.updateTable(localFilesTableView, fList);
     }
 
     public void goToRoot(Event actionEvent) {
         if(isLocalPanelAction(actionEvent)){
-            fsWorker.changeDirectory("~");
-            updateLocalList(fsWorker.getFilesList());
+            swLocal.changeDirectory("~");
+            updateFilesList(localFilesTableView, swLocal.getFilesList());
         } else {
-            connector.requestObject(FILE_CD, "~", (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
+            swRemote.changeDirectory("~");
+            updateFilesList(remoteFilesTableView, swRemote.getFilesList());
         }
     }
 
     public void goBack(Event actionEvent) {
         if(isLocalPanelAction(actionEvent)){
-            fsWorker.changeDirectory("..");
-            updateLocalList(fsWorker.getFilesList());
+            swLocal.changeDirectory("..");
+            updateFilesList(localFilesTableView, swLocal.getFilesList());
         } else {
-            connector.requestObject(FILE_CD, "..", (a) -> Platform.runLater(() ->updateRemoteList(a[0])));
+            swRemote.changeDirectory("..");
+            updateFilesList(remoteFilesTableView, swRemote.getFilesList());
         }
     }
 
@@ -174,15 +156,18 @@ public class ControllerMain implements Initializable {
                     "Create new directory on local storage",
                     MAKEDIR.url(),
                     args -> {
-                        fsWorker.mkdir((String) args[0]);
-                        updateLocalList(fsWorker.getFilesList());
+                        swLocal.makeDirectory((String) args[0]);
+                        updateFilesList(localFilesTableView, swLocal.getFilesList());
                     }
             );
         } else {
             new StageDialog(
                     "Create new directory on remote storage",
                     MAKEDIR.url(),
-                    args -> connector.requestObject(FILE_MKDIR, (String) args[0], (a) -> Platform.runLater(() ->updateRemoteList(a[0])))
+                    args -> {
+                        swRemote.makeDirectory((String) args[0]);
+                        updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+                    }
             );
         }
     }
@@ -195,25 +180,19 @@ public class ControllerMain implements Initializable {
                     DELETE.url(),
                     args -> {
                         localFilesTableView.getSelectionModel().getSelectedItems().forEach(
-                                (s) -> fsWorker.removeFile(((FSObject) s).getName())
+                                (s) -> swLocal.removeFile(((FSObject) s).getName())
                         );
-                        updateLocalList(fsWorker.getFilesList());
+                        updateFilesList(localFilesTableView, swLocal.getFilesList());
                     });
         } else {
             new StageDialog(
                     "Remove file(s) from remote storage",
                     DELETE.url(),
                     args -> {
-                        ObservableList i = remoteFilesTableView.getSelectionModel().getSelectedItems();
                         remoteFilesTableView.getSelectionModel().getSelectedItems().forEach(
-                                (s) -> {
-                                    Command ans = (Command) connector.requestObjectDirect(FILE_REMOVE, ((FSObject) s).getName());
-                                    if (!ans.equals(CMD_SUCCESS)){
-                                        System.out.println("ERROR: " + ans.name());
-                                    }
-                                }
+                                (s) -> swRemote.removeFile(((FSObject) s).getName())
                         );
-                        connector.requestObject(FILE_LIST, null, o -> updateRemoteList(o[0]));
+                        updateFilesList(remoteFilesTableView, swRemote.getFilesList());
                     });
         }
     }
@@ -221,9 +200,9 @@ public class ControllerMain implements Initializable {
     // Searches given name (On remote - from user root, local - from current position)
     public void searchFile(ActionEvent event) {
         if(isLocalPanelAction(event)){
-
+            updateFilesList(localFilesTableView, swLocal.searchFile(searchFieldLocal.getText()));
         } else {
-            connector.requestObject(FILE_SEARCH, searchFieldRemote.getText(), o -> updateRemoteList(o[0]));
+            updateFilesList(remoteFilesTableView, swRemote.searchFile(searchFieldRemote.getText()));
         }
 
     }
@@ -246,21 +225,26 @@ public class ControllerMain implements Initializable {
     // Downloads selected files
     //TODO: implement multiple selection download
     public void downloadSelected() {
-        FSObject source = (FSObject) remoteFilesTableView.getSelectionModel().getSelectedItem();
-        String dest = fsWorker.getLocation().toAbsolutePath().toString();
         StageProcessing sp = new StageProcessing(
                 FILE_DOWNLOAD,
-                source,
-                dest,
-                fsWorker,
-                connector,
-                args -> Platform.runLater(() -> updateLocalList(fsWorker.getFilesList()))
+                remoteFilesTableView.getSelectionModel().getSelectedItems(),
+                args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
         );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
         sp.show();
     }
 
+    // Uploads selected files
     public void uploadSelected(ActionEvent event) {
-        //TODO: implement upload
+        StageProcessing sp = new StageProcessing(
+                FILE_UPLOAD,
+                localFilesTableView.getSelectionModel().getSelectedItems(),
+                args -> Platform.runLater(() -> updateFilesList(remoteFilesTableView , swRemote.getFilesList()))
+        );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
+        sp.show();
     }
 
     // Closes connection.
