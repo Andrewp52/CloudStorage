@@ -5,166 +5,144 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane minWidth="900.0" prefHeight="400.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/10.0.2-internal"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerMain">
-   <VBox fx:id="container" layoutX="250.0" layoutY="100.0" minWidth="-Infinity" prefHeight="200.0" prefWidth="900.0"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-         AnchorPane.topAnchor="0.0">
+<AnchorPane minWidth="900.0" prefHeight="400.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerMain">
+   <VBox fx:id="container" layoutX="250.0" layoutY="100.0" minWidth="-Infinity" prefHeight="200.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <MenuBar minWidth="900.0">
          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="Edit profile"/>
-            <MenuItem mnemonicParsing="false" onAction="#logoff" text="Log off"/>
-            <MenuItem mnemonicParsing="false" text="Close"/>
+            <MenuItem mnemonicParsing="false" text="Edit profile" />
+            <MenuItem mnemonicParsing="false" onAction="#logoff" text="Log off" />
+            <MenuItem mnemonicParsing="false" text="Close" />
          </Menu>
          <Menu mnemonicParsing="false" text="Help">
-            <MenuItem mnemonicParsing="false" text="About"/>
+            <MenuItem mnemonicParsing="false" text="About" />
          </Menu>
       </MenuBar>
       <HBox fx:id="loginBox" alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="200.0">
          <padding>
-            <Insets left="15.0"/>
+            <Insets left="15.0" />
          </padding>
-         <Label text="Login"/>
+         <Label text="Login" />
          <TextField fx:id="loginField">
             <HBox.margin>
-               <Insets left="5.0"/>
+               <Insets left="5.0" />
             </HBox.margin>
          </TextField>
          <Label text="Password">
             <HBox.margin>
-               <Insets left="5.0"/>
+               <Insets left="5.0" />
             </HBox.margin>
          </Label>
          <PasswordField fx:id="passwordField" onAction="#authUser">
             <HBox.margin>
-               <Insets left="5.0"/>
+               <Insets left="5.0" />
             </HBox.margin>
          </PasswordField>
          <Button mnemonicParsing="false" onAction="#authUser" text="Ok">
             <HBox.margin>
-               <Insets left="5.0"/>
+               <Insets left="5.0" />
             </HBox.margin>
          </Button>
          <Button fx:id="buttonRegister" mnemonicParsing="false" onAction="#registerNewUser" text="Sign up">
             <HBox.margin>
-               <Insets left="10.0"/>
+               <Insets left="10.0" />
             </HBox.margin>
          </Button>
       </HBox>
       <SplitPane fx:id="splitPane" dividerPositions="0.5, 0.5" VBox.vgrow="ALWAYS">
          <AnchorPane minWidth="400.0">
-            <VBox fx:id="navRemote" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-               <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0"
-                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                     AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
-                  <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0"
-                          prefWidth="25.0">
+            <VBox fx:id="navRemote" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
+                  <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/house-64.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/house-64.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Home"/>
+                        <Tooltip text="Home" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#goBack"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#goBack" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/up.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/up.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Step back"/>
+                        <Tooltip text="Step back" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false"
-                          onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/newfolder.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/newfolder.png" />
                         </ImageView>
                      </graphic>
                      <HBox.margin>
-                        <Insets left="5.0"/>
+                        <Insets left="5.0" />
                      </HBox.margin>
                      <tooltip>
-                        <Tooltip text="Make new directory"/>
+                        <Tooltip text="Make new directory" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/copy.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/copy.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/cut.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/cut.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/paste.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/paste.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false"
-                          onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/delete.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/delete.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Remove"/>
+                        <Tooltip text="Remove" />
                      </tooltip>
                      <HBox.margin>
-                        <Insets right="5.0"/>
+                        <Insets right="5.0" />
                      </HBox.margin>
                   </Button>
-                  <TextField fx:id="searchFieldRemote" onAction="#searchFile" HBox.hgrow="ALWAYS"/>
-                  <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" onAction="#searchFile"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <TextField fx:id="searchFieldRemote" onAction="#searchFile" HBox.hgrow="ALWAYS" />
+                  <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" onAction="#searchFile" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/search.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/search.png" />
                         </ImageView>
                      </graphic>
                      <HBox.margin>
-                        <Insets right="5.0"/>
+                        <Insets right="5.0" />
                      </HBox.margin>
                   </Button>
                </HBox>
                <TableView fx:id="remoteFilesTableView" VBox.vgrow="ALWAYS">
                   <columns>
-                     <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name"/>
-                     <TableColumn editable="false" prefWidth="75.0" text="Type"/>
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size"/>
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created"/>
+                     <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
+                     <TableColumn editable="false" prefWidth="75.0" text="Type" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="remoteContextMenu">
                         <items>
-                           <MenuItem mnemonicParsing="false" text="Remove" onAction="#removeSelected" />
-                           <MenuItem mnemonicParsing="false" text="Download" onAction="#downloadSelected"/>
+                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
+                           <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
                         </items>
                      </ContextMenu>
                   </contextMenu>
@@ -173,158 +151,135 @@
          </AnchorPane>
          <AnchorPane maxWidth="-Infinity" minWidth="-Infinity" prefWidth="55.0">
             <VBox alignment="CENTER" layoutX="2.0" layoutY="139.0" AnchorPane.topAnchor="139.0">
-               <Button mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0"
-                       prefWidth="50.0">
+               <Button mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0" prefWidth="50.0">
                   <VBox.margin>
-                     <Insets bottom="5.0"/>
+                     <Insets bottom="5.0" />
                   </VBox.margin>
                   <graphic>
                      <ImageView fitHeight="20.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
                         <viewport>
-                           <Rectangle2D/>
+                           <Rectangle2D />
                         </viewport>
-                        <Image url="@../icons/transfer.png"/>
+                        <Image url="@../icons/transfer.png" />
                      </ImageView>
                   </graphic>
                   <tooltip>
-                     <Tooltip text="Download selected"/>
+                     <Tooltip text="Download selected" />
                   </tooltip>
                </Button>
-               <Button mnemonicParsing="false" prefWidth="50.0">
+               <Button mnemonicParsing="false" onAction="#uploadSelected" prefWidth="50.0">
                   <graphic>
-                     <ImageView fitHeight="20.0" fitWidth="35.0" nodeOrientation="RIGHT_TO_LEFT"
-                                pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../icons/transfer.png"/>
+                     <ImageView fitHeight="20.0" fitWidth="35.0" nodeOrientation="RIGHT_TO_LEFT" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../icons/transfer.png" />
                      </ImageView>
                   </graphic>
                   <tooltip>
-                     <Tooltip text="Upload selected"/>
+                     <Tooltip text="Upload selected" />
                   </tooltip>
                </Button>
             </VBox>
          </AnchorPane>
          <AnchorPane minWidth="400.0">
-            <VBox fx:id="navLocal" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-               <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0"
-                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                     AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
-                  <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0"
-                          prefWidth="25.0">
+            <VBox fx:id="navLocal" disable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="NEVER">
+                  <Button mnemonicParsing="false" onAction="#goToRoot" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/house-64.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/house-64.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Home"/>
+                        <Tooltip text="Home" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#goBack"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#goBack" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/up.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/up.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Step back"/>
+                        <Tooltip text="Step back" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="226.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/search.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/search.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false"
-                          onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#createDirectory" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/newfolder.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/newfolder.png" />
                         </ImageView>
                      </graphic>
                      <HBox.margin>
-                        <Insets left="5.0"/>
+                        <Insets left="5.0" />
                      </HBox.margin>
                      <tooltip>
-                        <Tooltip text="Make new directory"/>
+                        <Tooltip text="Make new directory" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/copy.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/copy.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/cut.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/cut.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/paste.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/paste.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false"
-                          onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="154.0" layoutY="10.0" mnemonicParsing="false" onAction="#removeSelected" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/delete.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/delete.png" />
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="Remove"/>
+                        <Tooltip text="Remove" />
                      </tooltip>
                      <HBox.margin>
-                        <Insets right="5.0"/>
+                        <Insets right="5.0" />
                      </HBox.margin>
                   </Button>
-                  <TextField fx:id="searchFieldLocal" onAction="#searchFile" HBox.hgrow="ALWAYS"/>
-                  <Button mnemonicParsing="false" onAction="#searchFile" prefHeight="25.0"
-                          prefWidth="25.0">
+                  <TextField fx:id="searchFieldLocal" onAction="#searchFile" HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" onAction="#searchFile" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
-                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true"
-                                   preserveRatio="true">
-                           <Image url="@../icons/search.png"/>
+                        <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <Image url="@../icons/search.png" />
                         </ImageView>
                      </graphic>
                      <HBox.margin>
-                        <Insets right="5.0"/>
+                        <Insets right="5.0" />
                      </HBox.margin>
                   </Button>
                </HBox>
                <TableView fx:id="localFilesTableView" VBox.vgrow="ALWAYS">
                   <columns>
-                     <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name"/>
-                     <TableColumn editable="false" prefWidth="75.0" text="Type"/>
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size"/>
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created"/>
+                     <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
+                     <TableColumn editable="false" prefWidth="75.0" text="Type" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="localContextMenu">
                         <items>
-                           <MenuItem mnemonicParsing="false" text="Remove" onAction="#removeSelected" />
-                           <MenuItem mnemonicParsing="false" text="Download" onAction="#downloadSelected"/>
+                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
+                           <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
                         </items>
                      </ContextMenu>
                   </contextMenu>
@@ -333,10 +288,8 @@
          </AnchorPane>
       </SplitPane>
       <AnchorPane prefHeight="20.0" prefWidth="200.0" VBox.vgrow="NEVER">
-         <Label fx:id="statusLabel" layoutX="74.0" layoutY="2.0" text="" AnchorPane.bottomAnchor="1.0"
-                AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="2.0"/>
-         <ProgressBar fx:id="progressBar" layoutX="386.0" layoutY="2.0" prefWidth="200.0" progress="0.0"
-                      AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="1.0"/>
+         <Label fx:id="statusLabel" layoutX="74.0" layoutY="2.0" text="" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="2.0" />
+         <ProgressBar fx:id="progressBar" layoutX="386.0" layoutY="2.0" prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="1.0" />
       </AnchorPane>
    </VBox>
 </AnchorPane>

@@ -5,6 +5,7 @@ import com.pae.cloudstorage.common.FSObject;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -94,8 +95,9 @@ public class StorageWorkerLocal implements StorageWorker{
 
     @Override
     public InputStream getStream(FSObject source) {
-        File f = new File(source.getPath());
-        try(FileInputStream fis = new FileInputStream(f)){
+        File f = new File(location.resolve(source.getPath()).toString());
+        try {
+            FileInputStream fis = new FileInputStream(f);
             return fis;
         } catch (IOException e) {
             e.printStackTrace();
@@ -124,8 +126,27 @@ public class StorageWorkerLocal implements StorageWorker{
     }
 
     @Override
-    public List<FSObject> getDirectoryPaths(FSObject source) {
-        return null;
+    // Retrieves all files and directories info from given directory
+    public List<FSObject> getDirectoryPaths(FSObject dir) {
+        List<FSObject> list = new ArrayList<>();
+        try {
+            Files.walkFileTree(location.resolve(dir.getPath()), new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    list.add(new FSObject(dir, location));
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    list.add(new FSObject(file, location));
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
 }

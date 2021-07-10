@@ -236,7 +236,7 @@ public class ControllerMain implements Initializable {
     }
 
     // Uploads selected files
-    public void uploadSelected(ActionEvent event) {
+    public void uploadSelected() {
         StageProcessing sp = new StageProcessing(
                 FILE_UPLOAD,
                 localFilesTableView.getSelectionModel().getSelectedItems(),

@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.server.network.handlers;
 
+import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.storage.FSWorker;
 import io.netty.channel.*;
@@ -19,9 +20,10 @@ import static com.pae.cloudstorage.common.Command.*;
  * Serves client`s commands (filesystem navigation & basic actions)
  * When it reads upload / download command it adds FileReceiverHandler or FileSenderHandler
  * and transfers there last command.
- * TODO: inmplement upload / download command handling.
  */
 public class CommInHandler extends SimpleChannelInboundHandler<String> {
+    private static final String DELIM = "%";
+    private ChannelHandlerContext context;
     private User user;
     private FSWorker worker;
     private final Logger logger = LogManager.getLogger(CommInHandler.class);
@@ -36,7 +38,9 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             worker = new FSWorker(this.user.getNick(), (a) -> ctx.channel().writeAndFlush(a[0])); // Callback impl. for FSWorker.
             ctx.channel().pipeline().remove(AuthHandler.class);
             ctx.channel().pipeline().addLast(new ObjectOutHandler());
+            ctx.channel().pipeline().get(FileReceiverHandler.class).setStorageWorker(worker);
         }
+        this.context = ctx;
     }
 
     @Override
@@ -49,7 +53,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             setObjOutHandler(ctx);
             ctx.channel().writeAndFlush(user);
         } else if (command.contains(FILE_DOWNLOAD.name())) {
-            String[] tokens = command.split(" ", 2);
+            String[] tokens = command.split(DELIM, 2);
             setFileOutHandler(ctx);
             ctx.channel().writeAndFlush(new ChunkedFile(worker.getFile(tokens[1])));
         } else {
@@ -61,37 +65,46 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
         logger.error("Command handler error: ", cause);
-        ctx.channel().writeAndFlush(cause);
     }
 
+    public void writeThrough(Object o){
+        this.context.channel().writeAndFlush(o);
+    }
 
     private void workWithCommand(String command, ChannelHandlerContext ctx) throws IOException {
         String[] tokens;
         if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
         } else if (command.contains(FILE_MKDIR.name())) {
-            tokens = command.split(" ");
+            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.mkdir(tokens[1]);
             }
         } else if (command.contains(FILE_CD.name())) {
-            tokens = command.split(" ");
+            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.changeDirectory(tokens[1]);
             }
         } else if (command.contains(FILE_REMOVE.name())) {
-            tokens = command.split(" ");
+            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.removeFile(tokens[1]);
             }
         } else if (command.contains(FILE_SEARCH.name())) {
-            tokens = command.split(" ", 2);
+            tokens = command.split(DELIM, 2);
             if (tokens.length > 1) {
                 worker.searchFile(tokens[1]);
             }
         } else if(command.contains(FILE_PATHS.name())){
-            tokens = command.split(" ", 2);
+            tokens = command.split(DELIM, 2);
             worker.getDirectoryPaths(tokens[1]);
+        } else if(command.contains(FILE_UPLOAD.name())){
+            tokens = command.split(DELIM);
+            if(tokens.length == 4){
+                FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);
+                ctx.channel().pipeline().fireUserEventTriggered(f);
+                ctx.channel().writeAndFlush(FILE_UPLOAD.name());
+            }
         }
     }
 

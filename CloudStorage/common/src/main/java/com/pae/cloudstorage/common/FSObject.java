@@ -12,6 +12,12 @@ public class FSObject implements Serializable {
    private Boolean isDirectory;
    private long size;
 
+   public FSObject(String name, String path, long size, boolean isDirectory){
+       this.name = name;
+       this.path = path;
+       this.size = size;
+       this.isDirectory = isDirectory;
+   }
     public FSObject(Path p, Path location) {
         if(p.getFileName() == null){
             name = p.getRoot().toString();

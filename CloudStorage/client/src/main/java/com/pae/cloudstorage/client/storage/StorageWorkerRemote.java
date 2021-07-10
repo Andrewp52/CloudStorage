@@ -4,7 +4,7 @@ import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
 import static com.pae.cloudstorage.common.Command.*;
@@ -48,7 +48,20 @@ public class StorageWorkerRemote implements StorageWorker{
 
     @Override
     public void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack) {
-
+        OutputStream out = connector.getUploadStream(source);
+        long count = 0;
+        try (in){
+            byte[] bytes = new byte[8 * 1024];
+            while (count < source.getSize()){
+                int read = in.read(bytes);
+                out.write(bytes, 0, read);
+                count += read;
+                callBack.call((double) count / (double) source.getSize());
+            }
+            connector.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -235,4 +235,19 @@ public class FSWorker {
             e.printStackTrace();
         }
     }
+
+    public RandomAccessFile getFileForWrite(FSObject file){
+        Path p = location.resolve(file.getPath());
+        RandomAccessFile raf;
+        try {
+            if (!Files.exists(p)) {
+                Files.createFile(p);
+            }
+            raf = new RandomAccessFile(p.toString(), "rw");
+            return raf;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

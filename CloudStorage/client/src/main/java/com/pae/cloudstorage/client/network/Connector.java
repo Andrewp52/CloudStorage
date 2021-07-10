@@ -6,11 +6,12 @@ import com.pae.cloudstorage.common.FSObject;
 
 import java.io.*;
 import java.net.Socket;
-import static com.pae.cloudstorage.common.Command.AUTH_OUT;
-import static com.pae.cloudstorage.common.Command.FILE_DOWNLOAD;
+
+import static com.pae.cloudstorage.common.Command.*;
 
 public class Connector {
-    private final String DELIM = "$_";
+    private static final String COMMDELIM = "%";
+    private static final String FRMDELIM = "$_";
     private final String host = "localhost";
     private final int port = 9999;
     private Socket socket;
@@ -33,27 +34,50 @@ public class Connector {
     }
 
     public Object requestObjectDirect(Command cmd, String arg){
-        Object o = null;
-        String command = arg == null || arg.isBlank()? cmd.name() + DELIM : cmd.name() + " " + arg + DELIM;
+        String command = arg == null || arg.isBlank()? cmd.name() + FRMDELIM : cmd.name() + COMMDELIM + arg + FRMDELIM;
         try {
             out.write((command).getBytes());
-            ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
-            ObjectInputStream ois = new ObjectInputStream(bis);
-            o = ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+            return readObject();
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        return o;
+        return null;
     }
 
     public DataInputStream getDownloadStream(FSObject source){
         try {
-            out.write((FILE_DOWNLOAD.name() + " " + source.getPath() + DELIM).getBytes());
+            out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getPath() + FRMDELIM).getBytes());
             return in;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public DataOutputStream getUploadStream(FSObject source){
+        String args = String.join(
+                COMMDELIM
+                , source.getName()
+                , source.getPath()
+                , String.valueOf(source.getSize())
+        );
+        String ans = (String) requestObjectDirect(FILE_UPLOAD, args);
+        if(ans.equals(FILE_UPLOAD.name())){
+            return out;
+        }
+        return null;
+    }
+
+    public Object readObject(){
+        Object o = null;
+        try(ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
+            ObjectInputStream ois = new ObjectInputStream(bis)
+        ){
+            o = ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return o;
     }
 
     // Reading byte array fom input stream
@@ -75,7 +99,7 @@ public class Connector {
     public void stop(){
         try {
             if(isConnectionAlive()){
-                out.write((AUTH_OUT.name() + DELIM).getBytes());
+                out.write((AUTH_OUT.name() + FRMDELIM).getBytes());
                 out.flush();
                 socket.close();
             }

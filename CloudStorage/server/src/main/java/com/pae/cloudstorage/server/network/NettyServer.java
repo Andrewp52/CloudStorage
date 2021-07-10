@@ -2,6 +2,7 @@ package com.pae.cloudstorage.server.network;
 
 import com.pae.cloudstorage.server.data.DataService;
 import com.pae.cloudstorage.server.network.handlers.AuthHandler;
+import com.pae.cloudstorage.server.network.handlers.FileReceiverHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -36,6 +37,7 @@ public class NettyServer {
                         @Override
                         protected void initChannel(SocketChannel ch){
                             ch.pipeline()
+                                    .addLast("FILEREC", new FileReceiverHandler())
                                     .addLast("FRAMEDEC", new DelimiterBasedFrameDecoder(MAXFRAMESIZE, Unpooled.copiedBuffer("$_".getBytes())))
                                     .addLast("STRDEC", new StringDecoder())
                                     .addLast("AUTH", new AuthHandler());
