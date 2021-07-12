@@ -13,13 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.pae.cloudstorage.common.Command.CMD_FAIL;
-import static com.pae.cloudstorage.common.Command.CMD_SUCCESS;
+import static com.pae.cloudstorage.common.Command.*;
 
 // Class for filesystem operations.
 // Needs Callback implementation.
 
-public class FSWorker {
+public class StorageWorker {
     private static final Path SRVROOT;
     private Path usrRoot;
     private Path location;
@@ -27,11 +26,11 @@ public class FSWorker {
     static {
         SRVROOT = Path.of(Main.getSrvConfig().get("srvroot"));
     }
-    public FSWorker(String nick, CallBack callBack) throws IOException {
+    public StorageWorker(int uid, CallBack callBack) throws IOException {
         this.callBack = callBack;
-        this.usrRoot = SRVROOT.resolve(Path.of(nick));
+        this.usrRoot = SRVROOT.resolve(Path.of(String.valueOf(uid)));
         if(!Files.exists(usrRoot)){
-            Files.createDirectory(SRVROOT.resolve(Path.of(nick)));
+            Files.createDirectory(SRVROOT.resolve(Path.of(String.valueOf(uid))));
         }
         location = usrRoot;
     }
@@ -117,9 +116,40 @@ public class FSWorker {
         try {
             Files.delete(p);
             callBack.call(CMD_SUCCESS);
+        } catch (DirectoryNotEmptyException e){
+            callBack.call(FILE_DNE);
         } catch (IOException e) {
             callBack.call(CMD_FAIL);
             e.printStackTrace();
+        }
+    }
+
+    public void removeDirRecursive(String name){
+        Path p = location.resolve(name);
+        try{
+            Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    exc.printStackTrace();
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+            });
+            callBack.call(CMD_SUCCESS);
+        } catch (IOException e){
+            e.printStackTrace();
+            callBack.call(CMD_FAIL);
         }
     }
 
@@ -156,7 +186,7 @@ public class FSWorker {
             Files.walkFileTree(location, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if (dir.getFileName().toString().equals(name)) {
+                    if (dir.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
                         found.add(new FSObject(dir, location));
                     }
                     return FileVisitResult.CONTINUE;
@@ -164,7 +194,7 @@ public class FSWorker {
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (file.getFileName().equals(name)) {
+                    if (file.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
                         found.add(new FSObject(file, location));
                     }
                     return FileVisitResult.CONTINUE;
@@ -213,7 +243,7 @@ public class FSWorker {
         return new File(location.resolve(Path.of(name)).toString());
     }
 
-    // Retrieves all files and directories info from given directory
+    // Retrieves all files and directories from given directory
     public void getDirectoryPaths(String token) {
         List<FSObject> list = new ArrayList<>();
         try {

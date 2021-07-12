@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 public class FileSenderHandler extends ChunkedWriteHandler {
     private static final Logger logger = LogManager.getLogger(FileSenderHandler.class);
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
@@ -17,4 +18,5 @@ public class FileSenderHandler extends ChunkedWriteHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error("File sending error: ", cause);
     }
+
 }

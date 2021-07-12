@@ -16,7 +16,9 @@ import javafx.scene.layout.*;
 
 
 import java.net.URL;
+import java.nio.file.DirectoryNotEmptyException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pae.cloudstorage.common.Command.*;
 import static com.pae.cloudstorage.client.stages.WindowURL.*;
@@ -40,13 +42,17 @@ public class ControllerMain implements Initializable {
     private final StorageWorker swRemote = new StorageWorkerRemote(connector);
     private User user;
     public void registerNewUser() {
-        // TODO: user registration form execution
+        StageDialog sd = new StageDialog("Sign Up", REGISTER, null);
+        sd.setConnector(connector);
+        sd.show();
     }
 
     // STUB AUTH
     public void authUser() {
+        StringJoiner sj = new StringJoiner(Connector.getDelimiter(), "", "")
+                .add(loginField.getText()).add(passwordField.getText());
         connector.start();
-        connector.requestObject(AUTH_REQ, "aaa", (a) -> Platform.runLater(() -> authReceived((String) a[0])));
+        connector.requestObject(AUTH_REQ, sj.toString(), (a) -> Platform.runLater(() -> authReceived((String) a[0])));
     }
 
     @Override
@@ -150,57 +156,72 @@ public class ControllerMain implements Initializable {
 
     // Creates a new directory (remote / local) depends on event source.
     // Path chain (d1/d2/....) is also works.
-    public void createDirectory(Event actionEvent){
-        if(isLocalPanelAction(actionEvent)){
-            new StageDialog(
-                    "Create new directory on local storage",
-                    MAKEDIR.url(),
-                    args -> {
-                        swLocal.makeDirectory((String) args[0]);
-                        updateFilesList(localFilesTableView, swLocal.getFilesList());
-                    }
-            );
+    public void createDirectory(Event event){
+        TableView tw;
+        StorageWorker sw;
+        if(isLocalPanelAction(event)){
+            tw = localFilesTableView;
+            sw = swLocal;
         } else {
-            new StageDialog(
-                    "Create new directory on remote storage",
-                    MAKEDIR.url(),
-                    args -> {
-                        swRemote.makeDirectory((String) args[0]);
-                        updateFilesList(remoteFilesTableView, swRemote.getFilesList());
-                    }
-            );
+            tw = remoteFilesTableView;
+            sw = swRemote;
         }
+        new StageDialog(
+                "Create new directory",
+                MAKEDIR,
+                args -> {
+                    sw.makeDirectory((String) args[0]);
+                }
+        ).showAndWait();
+        updateFilesList(tw, sw.getFilesList());
     }
 
-    // Deletes selected file(s)
+    // Deletes selected file(s) and directories
+    // Warns if directory for deletion is not empty
+    // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
+    // TODO: MOVE TO PROCESSING CONTROLLER
     public void removeSelected(ActionEvent event) {
+        TableView tw;
+        StorageWorker sw;
+        AtomicInteger ans = new AtomicInteger();
+        new StageDialog("Remove file(s)",
+                DELETE,
+                args -> ans.set((int) args[0])).showAndWait();
+
         if(isLocalPanelAction(event)){
-            new StageDialog(
-                    "Remove file(s) from local storage",
-                    DELETE.url(),
-                    args -> {
-                        localFilesTableView.getSelectionModel().getSelectedItems().forEach(
-                                (s) -> swLocal.removeFile(((FSObject) s).getName())
-                        );
-                        updateFilesList(localFilesTableView, swLocal.getFilesList());
-                    });
+            tw = localFilesTableView;
+            sw = swLocal;
         } else {
-            new StageDialog(
-                    "Remove file(s) from remote storage",
-                    DELETE.url(),
-                    args -> {
-                        remoteFilesTableView.getSelectionModel().getSelectedItems().forEach(
-                                (s) -> swRemote.removeFile(((FSObject) s).getName())
-                        );
-                        updateFilesList(remoteFilesTableView, swRemote.getFilesList());
-                    });
+            tw = remoteFilesTableView;
+            sw = swRemote;
         }
+
+        if(ans.get() != 0){
+            List<FSObject> selList = tw.getSelectionModel().getSelectedItems();
+            StorageWorker finalSw = sw;
+            selList.forEach(fso -> {
+                String name = fso.getName();
+                try {
+                    finalSw.removeFile(name);
+                } catch (DirectoryNotEmptyException e) {
+                    if(ans.get() != 2 && ans.get() != 3){
+                        StageDialog sd = new StageDialog("Directory deletion", DELETENOTEMP, o -> ans.set((int)o[0]));
+                        ((ControllerConfirmation) sd.getController()).message.setText("Directory " + name + "is not empty. Delete it?");
+                        sd.showAndWait();
+                    }
+                    if(ans.get() == 1 || ans.get() == 2){
+                        sw.removeDirRecursive(name);
+                    }
+                }
+            });
+        }
+        updateFilesList(tw, sw.getFilesList());
     }
 
     // Searches given name (On remote - from user root, local - from current position)
     public void searchFile(ActionEvent event) {
         if(isLocalPanelAction(event)){
-            updateFilesList(localFilesTableView, swLocal.searchFile(searchFieldLocal.getText()));
+            updateFilesList(localFilesTableView, swLocal.searchFile(new String(searchFieldLocal.getText())));
         } else {
             updateFilesList(remoteFilesTableView, swRemote.searchFile(searchFieldRemote.getText()));
         }
@@ -223,7 +244,6 @@ public class ControllerMain implements Initializable {
     }
 
     // Downloads selected files
-    //TODO: implement multiple selection download
     public void downloadSelected() {
         StageProcessing sp = new StageProcessing(
                 FILE_DOWNLOAD,

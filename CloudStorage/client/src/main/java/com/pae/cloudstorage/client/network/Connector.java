@@ -18,6 +18,10 @@ public class Connector {
     private DataOutputStream out;
     private DataInputStream in;
 
+    public static String getDelimiter() {
+        return COMMDELIM;
+    }
+
     public void start(){
         try {
             socket = new Socket(host, port);

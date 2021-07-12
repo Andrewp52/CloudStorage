@@ -2,9 +2,11 @@ package com.pae.cloudstorage.client.storage;
 
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.common.CallBack;
+import com.pae.cloudstorage.common.Command;
 import com.pae.cloudstorage.common.FSObject;
 
 import java.io.*;
+import java.nio.file.DirectoryNotEmptyException;
 import java.util.List;
 
 import static com.pae.cloudstorage.common.Command.*;
@@ -32,8 +34,16 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public void removeFile(String name) {
-        connector.requestObjectDirect(FILE_REMOVE, name);
+    public void removeFile(String name) throws DirectoryNotEmptyException {
+        Command c = (Command) connector.requestObjectDirect(FILE_REMOVE, name);
+        if(c.equals(FILE_DNE)){
+            throw new DirectoryNotEmptyException(name);
+        }
+    }
+
+    @Override
+    public void removeDirRecursive(String name) {
+        connector.requestObjectDirect(FILE_REMOVEREC, name);
     }
 
     @Override

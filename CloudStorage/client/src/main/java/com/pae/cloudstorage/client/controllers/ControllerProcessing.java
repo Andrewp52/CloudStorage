@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.client.controllers;
 
+import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.client.storage.StorageWorkerLocal;
 import com.pae.cloudstorage.client.storage.StorageWorkerRemote;
 import com.pae.cloudstorage.client.stages.StageProcessing;
@@ -22,8 +23,8 @@ public class ControllerProcessing {
     @FXML public ProgressBar progressBar;
 
     StageProcessing window;
-    StorageWorkerLocal localWorker;
-    StorageWorkerRemote remoteWorker;
+    StorageWorker localWorker;
+    StorageWorker remoteWorker;
 
     // Download selected files and directories from remote server (called by StageProcessing)
     public void download(List<FSObject> sources){
@@ -64,7 +65,7 @@ public class ControllerProcessing {
             operationLabel.setText("Downloading " + file.getName() + "...");
             progressBar.setProgress(0);
         });
-        String locPath = localWorker.getLocation().toAbsolutePath().toString();
+        String locPath = ((StorageWorkerLocal)localWorker).getLocation().toAbsolutePath().toString();
         localWorker.writeFromStream(
                 remoteWorker.getStream(file),
                 file,

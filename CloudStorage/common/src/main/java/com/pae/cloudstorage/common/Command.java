@@ -22,6 +22,8 @@ public enum Command {
     FILE_CD,
     FILE_MKDIR,
     FILE_REMOVE,
+    FILE_REMOVEREC,
+    FILE_DNE,
     FILE_COPY,
     FILE_SEARCH,
     FILE_PATHS,

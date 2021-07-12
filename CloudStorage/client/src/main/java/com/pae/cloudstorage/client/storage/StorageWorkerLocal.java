@@ -43,7 +43,41 @@ public class StorageWorkerLocal implements StorageWorker{
 
     @Override
     public List<FSObject> searchFile(String name) {
-        return null;
+        List<FSObject> found = new ArrayList<>();
+        try {
+            Files.walkFileTree(location, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    String filename;
+                    if(dir.getFileName() == null){
+                        filename = dir.getRoot().toString();
+                    } else {
+                        filename = dir.getFileName().toString();
+                    }
+                    if (filename.toLowerCase().contains(name.toLowerCase())) {
+                        found.add(new FSObject(dir, location));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (file.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
+                        found.add(new FSObject(file, location));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return found;
     }
 
     // Makes directory(ies) with given path.
@@ -84,11 +118,40 @@ public class StorageWorkerLocal implements StorageWorker{
 
     // Removes file or directory (except of not empty directory) returns String - operation result.
     @Override
-    public void removeFile(String name) {
+    public void removeFile(String name) throws DirectoryNotEmptyException {
         Path p = location.resolve(name);
         try {
             Files.delete(p);
+        } catch (DirectoryNotEmptyException e){
+            throw e;
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeDirRecursive(String name){
+        Path p = location.resolve(name);
+        try{
+            Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    exc.printStackTrace();
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+            });
+        } catch (IOException e){
             e.printStackTrace();
         }
     }
@@ -105,6 +168,7 @@ public class StorageWorkerLocal implements StorageWorker{
         return null;
     }
 
+    @Override
     public void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack){
         File f = new File(path + File.separator + source.getPath());
         try (FileOutputStream fos = new FileOutputStream(f, false)){
@@ -125,8 +189,8 @@ public class StorageWorkerLocal implements StorageWorker{
         }
     }
 
-    @Override
     // Retrieves all files and directories info from given directory
+    @Override
     public List<FSObject> getDirectoryPaths(FSObject dir) {
         List<FSObject> list = new ArrayList<>();
         try {

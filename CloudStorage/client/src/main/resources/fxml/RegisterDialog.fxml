@@ -9,6 +9,7 @@
 <?import javafx.scene.text.Font?>
 
 
+<?import javafx.scene.control.PasswordField?>
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="285.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.pae.cloudstorage.client.controllers.ControllerRegister">
    <children>
       <VBox alignment="TOP_CENTER" layoutX="250.0" layoutY="100.0" prefHeight="285.0" prefWidth="300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -20,8 +21,8 @@
             </Label>
             <AnchorPane prefHeight="30.0" prefWidth="200.0">
                <children>
-                  <Label text="First name" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <Label  text="First name" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
+                  <TextField fx:id="firstName" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
                <VBox.margin>
                   <Insets top="15.0" />
@@ -29,36 +30,36 @@
             </AnchorPane>
             <AnchorPane layoutX="10.0" layoutY="52.0" prefHeight="30.0" prefWidth="200.0">
                <children>
-                  <Label text="Last name" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <Label  text="Last name" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
+                  <TextField fx:id="lastName" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
             <AnchorPane layoutX="10.0" layoutY="82.0" prefHeight="30.0" prefWidth="200.0">
                <children>
-                  <Label text="Email" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <Label  text="Email" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
+                  <TextField fx:id="email" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
             <AnchorPane layoutX="10.0" layoutY="112.0" prefHeight="30.0" prefWidth="200.0">
                <children>
-                  <Label text="Login" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <Label  text="Login" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
+                  <TextField fx:id="login" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
             <AnchorPane layoutX="10.0" layoutY="142.0" prefHeight="30.0" prefWidth="200.0">
                <children>
                   <Label text="Password" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <PasswordField fx:id="pass" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
             <AnchorPane layoutX="10.0" layoutY="172.0" prefHeight="30.0" prefWidth="200.0">
                <children>
                   <Label text="Confirm password" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-                  <TextField prefHeight="25.0" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
+                  <PasswordField fx:id="passConfirm" prefHeight="25.0" prefWidth="172.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
-            <Label fx:id="dataValidLabel" text="Valid" />
-            <Button mnemonicParsing="false" prefWidth="172.0" text="Register user">
+            <Label fx:id="statusLabel" text="Valid" />
+            <Button fx:id="registerButton" mnemonicParsing="false" prefWidth="172.0" text="Register user" onAction="#register">
                <VBox.margin>
                   <Insets top="5.0" />
                </VBox.margin>
