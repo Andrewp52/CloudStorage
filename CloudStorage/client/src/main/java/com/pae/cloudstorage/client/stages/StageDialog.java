@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.client.stages;
 
+import com.pae.cloudstorage.client.misc.WindowURL;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.common.CallBack;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +9,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.URL;
 
 public class StageDialog extends Stage {
     FXMLLoader loader;

@@ -85,21 +85,21 @@
                         <Tooltip text="Make new directory" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#copyToBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/copy.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" onAction="#moveToBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/cut.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" onAction="#pasteFromBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/paste.png" />
@@ -222,21 +222,21 @@
                         <Tooltip text="Make new directory" />
                      </tooltip>
                   </Button>
-                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="46.0" layoutY="10.0" mnemonicParsing="false" onAction="#copyToBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/copy.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="82.0" layoutY="10.0" mnemonicParsing="false" onAction="#moveToBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/cut.png" />
                         </ImageView>
                      </graphic>
                   </Button>
-                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0">
+                  <Button layoutX="118.0" layoutY="10.0" mnemonicParsing="false" onAction="#pasteFromBuff" prefHeight="25.0" prefWidth="25.0">
                      <graphic>
                         <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                            <Image url="@../icons/paste.png" />
@@ -278,8 +278,14 @@
                   <contextMenu>
                      <ContextMenu fx:id="localContextMenu">
                         <items>
+                           <MenuItem mnemonicParsing="false" onAction="#uploadSelected" text="Upload" />
+                           <SeparatorMenuItem></SeparatorMenuItem>
+                           <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
+                           <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
+                           <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />
                            <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
-                           <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
+
                         </items>
                      </ContextMenu>
                   </contextMenu>

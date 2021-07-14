@@ -1,6 +1,7 @@
 package com.pae.cloudstorage.client.controllers;
 
-import com.pae.cloudstorage.client.FSTableViewPresentation;
+import com.pae.cloudstorage.client.misc.ExchangeBuffer;
+import com.pae.cloudstorage.client.misc.FSTableViewPresentation;
 import com.pae.cloudstorage.client.storage.*;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.*;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pae.cloudstorage.common.Command.*;
-import static com.pae.cloudstorage.client.stages.WindowURL.*;
+import static com.pae.cloudstorage.client.misc.WindowURL.*;
 
 public class ControllerMain implements Initializable {
     @FXML public TableView remoteFilesTableView;
@@ -41,6 +42,8 @@ public class ControllerMain implements Initializable {
     private final StorageWorker swLocal = new StorageWorkerLocal();
     private final StorageWorker swRemote = new StorageWorkerRemote(connector);
     private User user;
+    private ExchangeBuffer exBuffer;
+
     public void registerNewUser() {
         StageDialog sd = new StageDialog("Sign Up", REGISTER, null);
         sd.setConnector(connector);
@@ -206,7 +209,7 @@ public class ControllerMain implements Initializable {
                 } catch (DirectoryNotEmptyException e) {
                     if(ans.get() != 2 && ans.get() != 3){
                         StageDialog sd = new StageDialog("Directory deletion", DELETENOTEMP, o -> ans.set((int)o[0]));
-                        ((ControllerConfirmation) sd.getController()).message.setText("Directory " + name + "is not empty. Delete it?");
+                        ((ControllerConfirmation) sd.getController()).message.setText("Directory " + name + " is not empty. Delete it?");
                         sd.showAndWait();
                     }
                     if(ans.get() == 1 || ans.get() == 2){
@@ -226,21 +229,6 @@ public class ControllerMain implements Initializable {
             updateFilesList(remoteFilesTableView, swRemote.searchFile(searchFieldRemote.getText()));
         }
 
-    }
-
-    // Checks Event`s parent to find out is it local or remote panel.
-    // Because of Context menu is not child of Node there is special check here.
-    public boolean isLocalPanelAction(Event event){
-        if(event instanceof ActionEvent){
-            if(event.getSource() instanceof MenuItem) {
-                ContextMenu cm = ((MenuItem)event.getSource()).getParentPopup();
-                return cm.getId().contains("local");
-            } else {
-                return "navLocal".equals(((Node) event.getSource()).getParent().getParent().getId());
-            }
-        } else {
-            return "navLocal".equals(((Node) event.getSource()).getParent().getId());
-        }
     }
 
     // Downloads selected files
@@ -267,6 +255,59 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    public void copyToBuff(ActionEvent event) {
+        TableView tw;
+        StorageWorker sw;
+        if(isLocalPanelAction(event)){
+            tw = localFilesTableView;
+            sw = swLocal;
+        } else {
+            tw = remoteFilesTableView;
+            sw = swRemote;
+        }
+        exBuffer = new ExchangeBuffer(
+                new ArrayList<>(tw.getSelectionModel().getSelectedItems())
+                , sw.getLocation()
+                ,true
+                ,false
+        );
+    }
+
+    public void moveToBuff(ActionEvent event) {
+        copyToBuff(event);
+        exBuffer.setMove(true);
+    }
+
+    public void pasteFromBuff(ActionEvent event) {
+
+        StorageWorker src = exBuffer.isLocal() ? swLocal : swRemote;
+        StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
+        if (src == dst){
+            src.pasteExchBuffer(exBuffer);
+            updateFilesList(dst instanceof StorageWorkerLocal ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
+        } else {
+
+            updateFilesList(localFilesTableView, swLocal.getFilesList());
+            updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+        }
+
+    }
+
+    // Checks Event`s parent to find out is it local or remote panel.
+    // Because of Context menu is not child of Node there is special check here.
+    public boolean isLocalPanelAction(Event event){
+        if(event instanceof ActionEvent){
+            if(event.getSource() instanceof MenuItem) {
+                ContextMenu cm = ((MenuItem)event.getSource()).getParentPopup();
+                return cm.getId().contains("local");
+            } else {
+                return "navLocal".equals(((Node) event.getSource()).getParent().getParent().getId());
+            }
+        } else {
+            return "navLocal".equals(((Node) event.getSource()).getParent().getId());
+        }
+    }
+
     // Closes connection.
     public void stop(){
         connector.stop();
@@ -277,4 +318,5 @@ public class ControllerMain implements Initializable {
         stop();
         switchControls(false);
     }
+
 }

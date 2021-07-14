@@ -1,6 +1,7 @@
 package com.pae.cloudstorage.client.stages;
 
 import com.pae.cloudstorage.client.controllers.ControllerProcessing;
+import com.pae.cloudstorage.client.misc.WindowURL;
 import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
@@ -42,6 +43,7 @@ public class StageProcessing extends Stage {
                 case FILE_UPLOAD: setTitle("Upload");       break;
                 case FILE_REMOVE: setTitle("Remove");       break;
                 case FILE_COPY: setTitle("Copy");           break;
+                case FILE_MOVE: setTitle("Move");           break;
             }
             sizeToScene();
             setOnShowing(event -> {

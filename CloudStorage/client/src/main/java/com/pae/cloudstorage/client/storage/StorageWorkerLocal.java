@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.client.storage;
 
+import com.pae.cloudstorage.client.misc.ExchangeBuffer;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 
@@ -17,7 +18,7 @@ public class StorageWorkerLocal implements StorageWorker{
     Path location;
 
     public Path getLocation() {
-        return location;
+        return location.toAbsolutePath();
     }
 
     public void setLocation(Path location) {
@@ -133,14 +134,17 @@ public class StorageWorkerLocal implements StorageWorker{
         Path p = location.resolve(name);
         try{
             Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
+
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.setAttribute(file, "dos:readonly", false);
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.setAttribute(dir, "dos:readonly", false);
                     Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }
@@ -190,20 +194,21 @@ public class StorageWorkerLocal implements StorageWorker{
     }
 
     // Retrieves all files and directories info from given directory
-    @Override
-    public List<FSObject> getDirectoryPaths(FSObject dir) {
+    // If origin is provided paths will be relative to origin, else to current location.
+    public List<FSObject> getDirectoryPaths(FSObject dir, Path... origin) {
+        Path p = origin.length > 0 ? origin[0] : location;
         List<FSObject> list = new ArrayList<>();
         try {
-            Files.walkFileTree(location.resolve(dir.getPath()), new SimpleFileVisitor<Path>(){
+            Files.walkFileTree(p.resolve(dir.getPath()), new SimpleFileVisitor<Path>(){
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(dir, location));
+                    list.add(new FSObject(dir, p));
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(file, location));
+                    list.add(new FSObject(file, p));
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -211,6 +216,52 @@ public class StorageWorkerLocal implements StorageWorker{
             e.printStackTrace();
         }
         return list;
+    }
+
+    // Exchange buffer job (Copy Cut Paste)
+    @Override
+    public void pasteExchBuffer(ExchangeBuffer eb) {
+        Path origin = eb.getOrigin();
+        List<FSObject> files = new ArrayList<>();
+        if(eb.getOrigin().equals(location)){
+            System.out.println("IMPLEMENT SAME ORIGIN-LOCATION COPYPASTE BEHAVIOR");
+            return;
+        }
+        if(!eb.isMove()){
+            eb.getList().forEach(fsObject -> files.addAll(getDirectoryPaths(fsObject, origin)));
+            files.forEach(f -> copyFile(f, origin));
+        } else {
+            eb.getList().forEach(f -> moveFile(f, origin));
+        }
+    }
+
+    // Copies file or directory to the new location.
+    private void copyFile(FSObject file, Path origin){
+        try {
+            if (file.isDirectory()) {
+                Files.createDirectories(location.resolve(file.getPath()));
+            } else {
+                Files.copy(origin.resolve(file.getPath()), location.resolve(file.getPath()));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Moving file or directory to the new location
+    // Read only attribute set/reset is necessary for avoid AccessDeniedException.
+    private void moveFile(FSObject file, Path origin){
+        try {
+            if(file.isReadOnly()){
+                Files.setAttribute(origin.resolve(file.getPath()), "dos:readonly", false);
+            }
+            Files.move(origin.resolve(file.getPath()), location.resolve(file.getPath()));
+            if(file.isReadOnly()){
+                Files.setAttribute(location.resolve(file.getPath()), "dos:readonly", true);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

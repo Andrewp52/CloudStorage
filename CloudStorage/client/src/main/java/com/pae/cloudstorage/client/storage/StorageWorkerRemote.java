@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.client.storage;
 
+import com.pae.cloudstorage.client.misc.ExchangeBuffer;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
@@ -7,6 +8,7 @@ import com.pae.cloudstorage.common.FSObject;
 
 import java.io.*;
 import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.pae.cloudstorage.common.Command.*;
@@ -16,6 +18,11 @@ public class StorageWorkerRemote implements StorageWorker{
 
     public StorageWorkerRemote(Connector connector) {
         this.connector = connector;
+    }
+
+    @Override
+    public Path getLocation() {
+        return null;
     }
 
     @Override
@@ -75,7 +82,13 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public List<FSObject> getDirectoryPaths(FSObject source) {
+    public List<FSObject> getDirectoryPaths(FSObject source, Path... origin) {
         return (List<FSObject>) connector.requestObjectDirect(FILE_PATHS, source.getName());
+    }
+
+    @Override
+    public void pasteExchBuffer(ExchangeBuffer eb) {
+
+
     }
 }

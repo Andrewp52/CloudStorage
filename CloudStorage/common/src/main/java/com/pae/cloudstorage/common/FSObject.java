@@ -9,7 +9,8 @@ public class FSObject implements Serializable {
    private String name;
    private String path;
    private String type;
-   private Boolean isDirectory;
+   private boolean isDirectory;
+   private boolean isReadOnly;
    private long size;
 
    public FSObject(String name, String path, long size, boolean isDirectory){
@@ -27,12 +28,16 @@ public class FSObject implements Serializable {
             name = p.getFileName().toString();
             path = location.relativize(p).toString();
             isDirectory = Files.isDirectory(p);
+            try {
+                isReadOnly = (boolean) Files.getAttribute(p, "dos:readonly");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         if(!isDirectory){
             try {
                 size = Files.size(p);
                 type = Files.probeContentType(p);
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -59,7 +64,11 @@ public class FSObject implements Serializable {
         return type;
     }
 
-    public Boolean isDirectory() {
+    public boolean isDirectory() {
         return isDirectory;
+    }
+
+    public boolean isReadOnly(){
+       return this.isReadOnly;
     }
 }

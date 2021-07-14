@@ -37,7 +37,7 @@ public class ControllerConfirmation {
         ((StageDialog) this.anchorMain.getScene().getWindow()).close();
     }
 
-    // Retrieves callback from parent stage.
+    // Retrieves callback from stage.
     private CallBack getCallBack(){
         return ((StageDialog) this.anchorMain.getScene().getWindow()).getCallBack();
     }

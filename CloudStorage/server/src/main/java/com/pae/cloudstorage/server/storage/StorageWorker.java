@@ -43,17 +43,6 @@ public class StorageWorker {
         this.location = location;
     }
 
-    public void changeUserRoot(String newNick) throws IOException {
-        Path newRoot = SRVROOT.resolve(Path.of(newNick));
-        if(!Files.exists(newRoot)){
-            Files.move(usrRoot, newRoot, StandardCopyOption.ATOMIC_MOVE);
-            this.location = newRoot;
-            callBack.call("ok\n");
-        } else {
-            callBack.call("nickname is occupied\n");
-        }
-    }
-
     public void getFilesList(){
         List<FSObject> dirList = new ArrayList<>();
         Stream<Path> sp = null;

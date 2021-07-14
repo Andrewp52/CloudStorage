@@ -40,6 +40,7 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
         }
     }
 
+    // TODO: DO SOMETHING WITH ZERO-SIZE FILES
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf o) throws Exception {
         if(file != null){

@@ -1,10 +1,12 @@
 package com.pae.cloudstorage.client.storage;
 
+import com.pae.cloudstorage.client.misc.ExchangeBuffer;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 
 import java.io.InputStream;
 import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Path;
 import java.util.List;
 
 public interface StorageWorker {
@@ -16,5 +18,7 @@ public interface StorageWorker {
     void removeDirRecursive(String name);
     InputStream getStream(FSObject source);
     void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack);
-    List<FSObject> getDirectoryPaths(FSObject source);
+    List<FSObject> getDirectoryPaths(FSObject source, Path... origin);
+    void pasteExchBuffer(ExchangeBuffer eb);
+    Path getLocation();
 }

@@ -7,7 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static com.pae.cloudstorage.client.stages.WindowURL.MAIN;
+import static com.pae.cloudstorage.client.misc.WindowURL.MAIN;
 
 public class StageMain extends Application {
     @Override

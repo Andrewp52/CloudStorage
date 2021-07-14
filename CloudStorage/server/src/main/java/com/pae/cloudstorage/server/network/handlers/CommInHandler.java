@@ -66,46 +66,38 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
     }
 
     private void workWithCommand(String command, ChannelHandlerContext ctx) throws IOException {
-        String[] tokens;
+        String[] tokens = command.split(DELIM);
         if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
         } else if (command.contains(FILE_MKDIR.name())) {
-            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.mkdir(tokens[1]);
             }
         } else if (command.contains(FILE_CD.name())) {
-            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.changeDirectory(tokens[1]);
             }
         } else if (command.contains(FILE_REMOVEREC.name())) {
-            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.removeDirRecursive(tokens[1]);
             }
         } else if (command.contains(FILE_REMOVE.name())) {
-            tokens = command.split(DELIM);
             if (tokens.length > 1) {
                 worker.removeFile(tokens[1]);
             }
         } else if (command.contains(FILE_SEARCH.name())) {
-            tokens = command.split(DELIM, 2);
             if (tokens.length > 1) {
                 worker.searchFile(tokens[1]);
             }
         } else if(command.contains(FILE_PATHS.name())){
-            tokens = command.split(DELIM, 2);
             worker.getDirectoryPaths(tokens[1]);
         } else if(command.contains(FILE_UPLOAD.name())){
-            tokens = command.split(DELIM);
             if(tokens.length == 4){
                 FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);
                 ctx.channel().pipeline().fireUserEventTriggered(f);
                 ctx.fireChannelRead(FILE_UPLOAD.name());
             }
         } else if (command.contains(FILE_DOWNLOAD.name())) {
-            tokens = command.split(DELIM, 2);
             ctx.channel().writeAndFlush(new ChunkedFile(worker.getFile(tokens[1])));
         }
     }

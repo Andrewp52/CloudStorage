@@ -1,4 +1,4 @@
-package com.pae.cloudstorage.client;
+package com.pae.cloudstorage.client.misc;
 
 import com.pae.cloudstorage.common.FSObject;
 import javafx.collections.FXCollections;
