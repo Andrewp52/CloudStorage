@@ -18,6 +18,7 @@ public enum Command {
     //              Filesystem actions commands
     FILE_UPLOAD,
     FILE_DOWNLOAD,
+    FILE_SKIP,
     FILE_LIST,
     FILE_CD,
     FILE_MKDIR,

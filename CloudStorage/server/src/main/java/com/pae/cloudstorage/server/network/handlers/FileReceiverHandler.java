@@ -55,7 +55,7 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
                 resetAll();
             }
             if(!inProgress){
-                ctx.pipeline().get(CommInHandler.class).getContext().fireChannelRead(FILE_UPLOAD.name());
+                ctx.pipeline().get(CommInHandler.class).getContext().fireChannelRead(FILE_UPLOAD);
             }
         } else {
             ctx.fireChannelRead(o.retain());

@@ -68,6 +68,9 @@ public class StorageWorkerRemote implements StorageWorker{
         OutputStream out = connector.getUploadStream(source);
         long count = 0;
         try (in){
+            if (out == null){
+                return;
+            }
             byte[] bytes = new byte[8 * 1024];
             while (count < source.getSize()){
                 int read = in.read(bytes);

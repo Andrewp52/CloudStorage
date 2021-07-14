@@ -94,8 +94,12 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
         } else if(command.contains(FILE_UPLOAD.name())){
             if(tokens.length == 4){
                 FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);
-                ctx.channel().pipeline().fireUserEventTriggered(f);
-                ctx.fireChannelRead(FILE_UPLOAD.name());
+                if(f.getSize() == 0){
+                    worker.touchFile(f);
+                } else {
+                    ctx.channel().pipeline().fireUserEventTriggered(f);
+                    ctx.fireChannelRead(FILE_UPLOAD);
+                }
             }
         } else if (command.contains(FILE_DOWNLOAD.name())) {
             ctx.channel().writeAndFlush(new ChunkedFile(worker.getFile(tokens[1])));

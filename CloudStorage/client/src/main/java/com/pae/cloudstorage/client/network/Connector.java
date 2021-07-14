@@ -65,10 +65,13 @@ public class Connector {
                 , source.getPath()
                 , String.valueOf(source.getSize())
         );
-        String ans = (String) requestObjectDirect(FILE_UPLOAD, args);
-        if(ans.equals(FILE_UPLOAD.name())){
+        Command ans = (Command) requestObjectDirect(FILE_UPLOAD, args);
+        if (ans.equals(FILE_UPLOAD)){
             return out;
+        } else if(ans.equals(FILE_SKIP)){
+            return null;
         }
+        // TODO: Thow some exception
         return null;
     }
 

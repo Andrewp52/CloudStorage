@@ -57,14 +57,14 @@ public class StorageWorker {
     }
 
     // Creates new file with given name
-    public void touchFile(String name) {
-        String ans = String.format("%s created\n", name);
+    // We need it for zero-sized files upload
+    public void touchFile(FSObject file) {
         try {
-            Files.createFile(this.location.resolve(name));
+            Files.createFile(this.location.resolve(file.getPath()));
         } catch (IOException e){
-            ans = String.format("Can`t create file %s\n", name);
+            e.printStackTrace();
         }
-        callBack.call(ans);
+        callBack.call(FILE_SKIP);
     }
 
     // Makes directory(ies) with given path.
