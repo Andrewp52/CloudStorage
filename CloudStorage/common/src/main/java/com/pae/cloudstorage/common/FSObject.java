@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FSObject implements Serializable {
+
+    private static final long serialVersionUID = -6743567631108323096L;         // SERIALIZATION MAGIC....
    private String name;
    private String path;
    private String type;

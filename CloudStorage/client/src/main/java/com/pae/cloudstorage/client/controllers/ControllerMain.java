@@ -258,9 +258,11 @@ public class ControllerMain implements Initializable {
     public void copyToBuff(ActionEvent event) {
         TableView tw;
         StorageWorker sw;
+        boolean ebLocal = false;
         if(isLocalPanelAction(event)){
             tw = localFilesTableView;
             sw = swLocal;
+            ebLocal = true;
         } else {
             tw = remoteFilesTableView;
             sw = swRemote;
@@ -268,7 +270,7 @@ public class ControllerMain implements Initializable {
         exBuffer = new ExchangeBuffer(
                 new ArrayList<>(tw.getSelectionModel().getSelectedItems())
                 , sw.getLocation()
-                ,true
+                , ebLocal
                 ,false
         );
     }
@@ -279,14 +281,12 @@ public class ControllerMain implements Initializable {
     }
 
     public void pasteFromBuff(ActionEvent event) {
-
         StorageWorker src = exBuffer.isLocal() ? swLocal : swRemote;
         StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
         if (src == dst){
             src.pasteExchBuffer(exBuffer);
             updateFilesList(dst instanceof StorageWorkerLocal ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
         } else {
-
             updateFilesList(localFilesTableView, swLocal.getFilesList());
             updateFilesList(remoteFilesTableView, swRemote.getFilesList());
         }

@@ -30,6 +30,7 @@ public enum Command {
     FILE_PATHS,
     FILE_MOVE,
 
+    LOCATION,
     CMD_SUCCESS,
     CMD_FAIL;
 }

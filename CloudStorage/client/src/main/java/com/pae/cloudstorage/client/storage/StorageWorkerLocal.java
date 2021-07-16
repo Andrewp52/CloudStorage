@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-// Class for disk operations.
-// Needs Callback implementation.
+// Class for storage operations.
 
 public class StorageWorkerLocal implements StorageWorker{
     Path location;
@@ -130,6 +129,7 @@ public class StorageWorkerLocal implements StorageWorker{
         }
     }
 
+    // Removes directory and all it`s inner content
     public void removeDirRecursive(String name){
         Path p = location.resolve(name);
         try{
@@ -195,7 +195,7 @@ public class StorageWorkerLocal implements StorageWorker{
 
     // Retrieves all files and directories info from given directory
     // If origin is provided paths will be relative to origin, else to current location.
-    public List<FSObject> getDirectoryPaths(FSObject dir, Path... origin) {
+    public List<FSObject> populateDirectory(FSObject dir, Path... origin) {
         Path p = origin.length > 0 ? origin[0] : location;
         List<FSObject> list = new ArrayList<>();
         try {
@@ -228,7 +228,7 @@ public class StorageWorkerLocal implements StorageWorker{
             return;
         }
         if(!eb.isMove()){
-            eb.getList().forEach(fsObject -> files.addAll(getDirectoryPaths(fsObject, origin)));
+            eb.getList().forEach(fsObject -> files.addAll(populateDirectory(fsObject, origin)));
             files.forEach(f -> copyFile(f, origin));
         } else {
             eb.getList().forEach(f -> moveFile(f, origin));

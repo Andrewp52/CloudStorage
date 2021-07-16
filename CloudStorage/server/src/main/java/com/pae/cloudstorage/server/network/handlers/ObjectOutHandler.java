@@ -10,11 +10,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 /**
- * Object serialization handler on Inbound handler.
+ * Object serialization handler based on Inbound handler.
  * Serializes & sends serializable objects as ByteBuf
- * Buffer contains two int at start bytes:
- * start position - 0 and Object`s byte-array length.
- * Regular Socket read operations compatible.
  */
 public class ObjectOutHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger logger = LogManager.getLogger(ObjectOutHandler.class);
@@ -32,13 +29,10 @@ public class ObjectOutHandler extends SimpleChannelInboundHandler<Object> {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream ous = new ObjectOutputStream(bos);
             ous.writeObject(msg);
-            bb.writeInt(0).writeInt(bos.size()).writeBytes(bos.toByteArray());
-            ctx.channel().flush();
+            bb.writeBytes(bos.toByteArray());
             ctx.pipeline().get(RawOutHandler.class).writeThrough(bb);
-            ctx.channel().pipeline().fireChannelReadComplete();
         } catch (IOException e) {
             logger.error("Object sending error: ", e);
-            System.out.println(msg);
         }
     }
 

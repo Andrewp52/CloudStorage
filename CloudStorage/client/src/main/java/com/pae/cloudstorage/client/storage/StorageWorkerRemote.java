@@ -10,6 +10,7 @@ import java.io.*;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static com.pae.cloudstorage.common.Command.*;
 
@@ -22,7 +23,7 @@ public class StorageWorkerRemote implements StorageWorker{
 
     @Override
     public Path getLocation() {
-        return null;
+        return Path.of((String) connector.requestObjectDirect(LOCATION, null));
     }
 
     @Override
@@ -85,13 +86,28 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public List<FSObject> getDirectoryPaths(FSObject source, Path... origin) {
+    public List<FSObject> populateDirectory(FSObject source, Path... origin) {
         return (List<FSObject>) connector.requestObjectDirect(FILE_PATHS, source.getName());
     }
 
     @Override
     public void pasteExchBuffer(ExchangeBuffer eb) {
+        if(!eb.isMove()){
+            eb.getList().forEach(f -> copyFile(f, eb.getOrigin()));
+        } else {
+            eb.getList().forEach(f -> moveFile(f, eb.getOrigin()));
+        }
+    }
 
+    private void copyFile(FSObject file, Path origin){
+        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
+        args.add(file.getName()).add(origin.toString());;
+        Command ans = (Command) connector.requestObjectDirect(FILE_COPY, args.toString());
+    }
 
+    private void moveFile(FSObject file, Path origin){
+        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
+        args.add(file.getName()).add(origin.toString());
+        Command ans = (Command) connector.requestObjectDirect(FILE_MOVE, args.toString());
     }
 }

@@ -15,8 +15,8 @@ public class RawOutHandler extends ChannelOutboundHandlerAdapter {
         context = ctx;
     }
 
-    void writeThrough(ByteBuf bb){
-        context.channel().writeAndFlush(bb, context.voidPromise());
+    void writeThrough(ByteBuf bb) {
+        context.channel().writeAndFlush(bb);
     }
 
 }

@@ -69,6 +69,8 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
         String[] tokens = command.split(DELIM);
         if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
+        } else if (command.contains(LOCATION.name())) {
+            worker.getLocation();
         } else if (command.contains(FILE_MKDIR.name())) {
             if (tokens.length > 1) {
                 worker.mkdir(tokens[1]);
@@ -90,7 +92,11 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
                 worker.searchFile(tokens[1]);
             }
         } else if(command.contains(FILE_PATHS.name())){
-            worker.getDirectoryPaths(tokens[1]);
+            worker.populateDirectory(tokens[1], null);
+        } else if(command.contains(FILE_COPY.name())){
+            worker.copyFile(tokens[1], tokens[2]);
+        } else if(command.contains(FILE_MOVE.name())) {
+            worker.moveFile(tokens[1], tokens[2]);
         } else if(command.contains(FILE_UPLOAD.name())){
             if(tokens.length == 4){
                 FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);

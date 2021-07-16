@@ -71,35 +71,19 @@ public class Connector {
         } else if(ans.equals(FILE_SKIP)){
             return null;
         }
-        // TODO: Thow some exception
+        // TODO: Throw some exception
         return null;
     }
 
     public Object readObject(){
         Object o = null;
-        try(ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
-            ObjectInputStream ois = new ObjectInputStream(bis)
-        ){
+        try{
+            ObjectInputStream ois = new ObjectInputStream(in);
             o = ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return o;
-    }
-
-    // Reading byte array fom input stream
-    private byte[] getBytesFromInput(){
-        byte[] arr;
-        try {
-            int start = in.readInt();
-            int len = in.readInt();
-            arr = new byte[len];
-            in.read(arr, start, len);
-        } catch (IOException e){
-            e.printStackTrace();
-            return new byte[0];
-        }
-        return arr;
     }
 
     // Sends bye message to remote server and closes connection.

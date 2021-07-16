@@ -47,7 +47,7 @@ public class ControllerProcessing {
     // Downloads all inner files.
     private void downloadDirectory(FSObject dir){
         Platform.runLater(() -> operationLabel.setText("Preparing...."));
-        List<FSObject> paths = remoteWorker.getDirectoryPaths(dir);
+        List<FSObject> paths = remoteWorker.populateDirectory(dir);
         List<FSObject> files = new ArrayList<>();
         paths.forEach(fsObject ->{
             if (fsObject.isDirectory()){
@@ -95,7 +95,7 @@ public class ControllerProcessing {
     // Uploads all inner files.
     private void uploadDirectory(FSObject dir){
         Platform.runLater(() -> operationLabel.setText("Preparing...."));
-        List<FSObject> paths = localWorker.getDirectoryPaths(dir);
+        List<FSObject> paths = localWorker.populateDirectory(dir);
         List<FSObject> files = new ArrayList<>();
         paths.forEach(fsObject ->{
             if (fsObject.isDirectory()){

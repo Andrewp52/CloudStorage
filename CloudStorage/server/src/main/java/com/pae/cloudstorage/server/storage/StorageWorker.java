@@ -5,8 +5,6 @@ import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.server.Main;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -35,8 +33,8 @@ public class StorageWorker {
         location = usrRoot;
     }
 
-    public Path getLocation() {
-        return location;
+    public void getLocation() {
+        callBack.call(usrRoot.relativize(location).toString());
     }
 
     public void setLocation(Path location) {
@@ -142,33 +140,6 @@ public class StorageWorker {
         }
     }
 
-    // Reads content of a given file
-    public void catFile(String name) throws IOException {
-        Path p = location.resolve(name);
-        String ans;
-        try {
-            if(!Files.exists(p) || Files.isDirectory(p)){
-                throw new NoSuchFileException("invalid filename");
-            }
-            StringBuilder sb = new StringBuilder();
-            FileChannel fc = new RandomAccessFile(p.toString(), "r").getChannel();
-            ByteBuffer buffer = ByteBuffer.allocate(12);
-
-            while (fc.read(buffer) >=0){
-                buffer.flip();
-                while (buffer.hasRemaining()){
-                    sb.append((char) buffer.get());
-                }
-                buffer.rewind();
-            }
-            fc.close();
-            ans = sb.toString();
-        } catch (NoSuchFileException e){
-            ans = "invalid filename";
-        }
-        callBack.call(ans);
-    }
-
     public void searchFile(String name) {
         List<FSObject> found = new ArrayList<>();
         try {
@@ -195,64 +166,81 @@ public class StorageWorker {
         callBack.call(found);
     }
 
-    // Copies file or directory (with inner content)
-    public void copyFile(String name, String dest){
-        Path src = location.resolve(name);
-        Path dst = location.resolve(dest);
-        String ans = "ok\n";
-        try {
-            if(Files.isDirectory(src)){
-                Files.walkFileTree(src, new SimpleFileVisitor<Path>(){
-                    @Override
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                        Files.createDirectories(dst.resolve(src.relativize(dir)));
-                        return FileVisitResult.CONTINUE;
+    // Copies file or directory (with inner content) from it`s origin to current location
+    public void copyFile(String name, String originStr){
+        Path origin = usrRoot.resolve(originStr);
+        Path src = origin.resolve(name);
+        if(Files.isDirectory(src)){
+            List<FSObject> files = populateDirectory(name, origin.toString());
+            files.forEach(f -> {
+                try {
+                    if (f.isDirectory()) {
+                        Files.createDirectories(location.resolve(f.getPath()));
+                    } else {
+                        Files.copy(origin.resolve(f.getPath()), location.resolve(f.getPath()));
                     }
-
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Files.copy(file, dst.resolve(src.relativize(file)));
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            } else {
-                if(Files.isDirectory(dst)){
-                    Files.copy(src, dst.resolve(location.relativize(src)));
-                } else {
-                    Files.copy(src, dst);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }
-        } catch (IOException e){
-            ans = "Copy error: " + e.getMessage() + "\n";
+            });
         }
-        callBack.call(ans);
+        callBack.call(CMD_SUCCESS);
     }
 
+    // Moves file or directory from it`s origin to current location
+    public void moveFile(String name, String originStr){
+        Path origin = usrRoot.resolve(originStr);
+        Path src = origin.resolve(name);
+        if(Files.isDirectory(src)){
+            List<FSObject> files = populateDirectory(name, origin.toString());
+            files.forEach(f -> {
+                try {
+                    if(f.isReadOnly()){
+                        Files.setAttribute(origin.resolve(f.getPath()), "dos:readonly", false);
+                    }
+                    Files.move(origin.resolve(f.getPath()), location.resolve(f.getPath()));
+                    if(f.isReadOnly()){
+                        Files.setAttribute(location.resolve(f.getPath()), "dos:readonly", true);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        callBack.call(CMD_SUCCESS);
+    }
+
+    // Returns file for sending to client
     public File getFile(String name) {
         return new File(location.resolve(Path.of(name)).toString());
     }
 
     // Retrieves all files and directories from given directory
-    public void getDirectoryPaths(String token) {
+    // Depends on origin is present or not
+    public List<FSObject> populateDirectory(String token, String... origin) {
+        Path src = origin == null ? location : Path.of(origin[0]);
         List<FSObject> list = new ArrayList<>();
         try {
-            Files.walkFileTree(location.resolve(token), new SimpleFileVisitor<Path>(){
+            Files.walkFileTree(src.resolve(token), new SimpleFileVisitor<Path>(){
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(dir, location));
+                    list.add(new FSObject(dir, src));
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(file, location));
+                    list.add(new FSObject(file, src));
                     return FileVisitResult.CONTINUE;
                 }
             });
-            callBack.call(list);
+            if(origin == null){
+                callBack.call(list);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return list;
     }
 
     public RandomAccessFile getFileForWrite(FSObject file){
