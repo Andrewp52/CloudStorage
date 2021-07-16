@@ -18,10 +18,19 @@ public enum Command {
     //              Filesystem actions commands
     FILE_UPLOAD,
     FILE_DOWNLOAD,
+    FILE_SKIP,
     FILE_LIST,
     FILE_CD,
     FILE_MKDIR,
     FILE_REMOVE,
+    FILE_REMOVEREC,
+    FILE_DNE,
     FILE_COPY,
-    FILE_SEARCH
+    FILE_SEARCH,
+    FILE_PATHS,
+    FILE_MOVE,
+
+    LOCATION,
+    CMD_SUCCESS,
+    CMD_FAIL;
 }

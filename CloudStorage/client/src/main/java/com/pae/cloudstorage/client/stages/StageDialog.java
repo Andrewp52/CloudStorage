@@ -1,5 +1,7 @@
 package com.pae.cloudstorage.client.stages;
 
+import com.pae.cloudstorage.client.misc.WindowURL;
+import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.common.CallBack;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -7,23 +9,20 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.URL;
 
 public class StageDialog extends Stage {
+    FXMLLoader loader;
     private String dialogName;
-    private URL fileToOpen;
     private CallBack callBack;
-
-    public StageDialog(String dialogName, URL fileToOpen, CallBack callBack) {
+    private Connector connector;
+    public StageDialog(String dialogName, WindowURL wurl, CallBack callBack) {
+        this.loader = new FXMLLoader(wurl.url());
         this.dialogName = dialogName;
-        this.fileToOpen = fileToOpen;
         this.callBack = callBack;
         init();
-        show();
     }
 
     private void init(){
-        FXMLLoader loader = new FXMLLoader(fileToOpen);
         try {
             Parent root = loader.load();
             setScene(new Scene(root));
@@ -34,7 +33,19 @@ public class StageDialog extends Stage {
         }
     }
 
+    public Connector getConnector() {
+        return connector;
+    }
+
+    public void setConnector(Connector connector) {
+        this.connector = connector;
+    }
+
     public CallBack getCallBack(){
         return this.callBack;
+    }
+
+    public Object getController(){
+        return loader.getController();
     }
 }

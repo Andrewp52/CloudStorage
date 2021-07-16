@@ -1,4 +1,4 @@
-package com.pae.cloudstorage.client.stages;
+package com.pae.cloudstorage.client.misc;
 
 import java.net.URL;
 
@@ -6,8 +6,10 @@ public enum WindowURL {
     MAIN("/fxml/MainWindow.fxml"),
     MAKEDIR("/fxml/MakeDirDialog.fxml"),
     DELETE("/fxml/DeleteDialog.fxml"),
-    PROFILE("/fxml/ProfileDialog.fxml");
-
+    DELETENOTEMP("/fxml/DeleteNonEmptyDialog.fxml"),
+    PROFILE("/fxml/ProfileDialog.fxml"),
+    PROCESSING("/fxml/ProcessingPopup.fxml"),
+    REGISTER("/fxml/RegisterDialog.fxml");
     String s;
     WindowURL(String s) {
         this.s = s;

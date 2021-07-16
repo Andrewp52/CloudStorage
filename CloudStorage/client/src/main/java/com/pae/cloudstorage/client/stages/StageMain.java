@@ -7,7 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static com.pae.cloudstorage.client.stages.WindowURL.MAIN;
+import static com.pae.cloudstorage.client.misc.WindowURL.MAIN;
 
 public class StageMain extends Application {
     @Override
@@ -17,6 +17,7 @@ public class StageMain extends Application {
         primaryStage.setTitle("Cloud storage");
         primaryStage.setScene(new Scene(root));
         primaryStage.sizeToScene();
+        primaryStage.setMinWidth(900);
         primaryStage.setOnCloseRequest(event -> {
             ControllerMain controller = loader.getController();
             controller.stop();

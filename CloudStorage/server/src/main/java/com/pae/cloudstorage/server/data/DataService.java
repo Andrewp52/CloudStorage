@@ -14,12 +14,12 @@ public class DataService {
         conn = connector.getConnection();
     }
 
-    public User authUser(String nick, int pass){
+    public User authUser(String nick, String pass){
         User u = null;
         try {
-            PreparedStatement ps = conn.prepareStatement("select * from v_auth where nick = ? and pass = ?");
+            PreparedStatement ps = conn.prepareStatement("select * from users where nick = ? and pass = ?");
             ps.setString(1, nick);
-            ps.setInt(2, pass);
+            ps.setInt(2, pass.hashCode());
             ResultSet rs = ps.executeQuery();
             if (rs.next()){
                  u = new User(
@@ -29,7 +29,7 @@ public class DataService {
                         rs.getString(5),
                         rs.getString(6),
                         rs.getString(7),
-                        rs.getLong(8)
+                         0                                              // QUOTA IS NOT AVAILABLE NOW
                 );
             }
             rs.close();
@@ -39,9 +39,9 @@ public class DataService {
         return u;
     }
 
-    public boolean registerUser(String nick,String pass,String fname, String lname,String email){
+    public boolean registerUser(String fname, String lname, String email, String nick, String pass){
         try {
-            PreparedStatement ps = conn.prepareStatement("inser into users (nick, pass, fname, lname, email) values (?, ?, ?, ?, ?)");
+            PreparedStatement ps = conn.prepareStatement("insert into users (nick, pass, fname, lname, email) values (?, ?, ?, ?, ?)");
             ps.setString(1, nick);
             ps.setInt(2, pass.hashCode());
             ps.setString(3, fname);

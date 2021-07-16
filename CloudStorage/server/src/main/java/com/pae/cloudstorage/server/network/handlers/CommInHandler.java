@@ -1,8 +1,10 @@
 package com.pae.cloudstorage.server.network.handlers;
 
+import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.common.User;
-import com.pae.cloudstorage.server.filesystem.FSWorker;
+import com.pae.cloudstorage.server.storage.StorageWorker;
 import io.netty.channel.*;
+import io.netty.handler.stream.ChunkedFile;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -17,71 +19,97 @@ import static com.pae.cloudstorage.common.Command.*;
  * Serves client`s commands (filesystem navigation & basic actions)
  * When it reads upload / download command it adds FileReceiverHandler or FileSenderHandler
  * and transfers there last command.
- * TODO: inmplement upload / download command handling.
  */
 public class CommInHandler extends SimpleChannelInboundHandler<String> {
-    private User user;
+    private static final String DELIM = "%";
     private ChannelHandlerContext context;
-    private FSWorker worker;
-    Logger logger = LogManager.getLogger(CommInHandler.class);
-    public CommInHandler(User user) {
+    private User user;
+    private StorageWorker worker;
+    private final Logger logger = LogManager.getLogger(CommInHandler.class);
+
+    public void setup(User user) throws IOException {
         this.user = user;
+        worker = new StorageWorker(user.getId(), (a) -> context.fireChannelRead(a[0]));
+        context.channel().pipeline().get(FileReceiverHandler.class).setStorageWorker(worker);
+    }
+
+    public static String getDelimiter() {
+        return DELIM;
     }
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        if(ctx.channel().pipeline().get(AuthHandler.class) != null){
-            ctx.channel().pipeline().remove(AuthHandler.class);
-            worker = new FSWorker(this.user.getNick(), (a) -> ctx.channel().writeAndFlush(a[0])); // Callback impl. for FSWorker.
-            context = ctx;
-        }
+        this.context = ctx;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
+
         String command = s.replace("\n", "").replace("\r", "");
         if(AUTH_OUT.name().equals(command)){
             ctx.channel().close().syncUninterruptibly();
             ctx.channel().closeFuture();
         } else if(PROFILE_REQ.name().equals(command)){
-            ctx.channel().writeAndFlush(user);
-        } else {
-            workWithCommand(command);
+            ctx.fireChannelRead(user);
+        }  else {
+            workWithCommand(command, ctx);
         }
-
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
         logger.error("Command handler error: ", cause);
-        ctx.channel().writeAndFlush(cause);
     }
 
-    private void workWithCommand(String command) throws IOException {
-        String[] tokens;
+    ChannelHandlerContext getContext(){
+        return context;
+    }
+
+    private void workWithCommand(String command, ChannelHandlerContext ctx) throws IOException {
+        String[] tokens = command.split(DELIM);
         if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
+        } else if (command.contains(LOCATION.name())) {
+            worker.getLocation();
         } else if (command.contains(FILE_MKDIR.name())) {
-            tokens = command.split(" ");
             if (tokens.length > 1) {
                 worker.mkdir(tokens[1]);
             }
         } else if (command.contains(FILE_CD.name())) {
-            tokens = command.split(" ");
             if (tokens.length > 1) {
                 worker.changeDirectory(tokens[1]);
             }
-        } else if (command.contains(FILE_REMOVE.name())) {          //TODO: REWORK IT !!!!
-            tokens = command.split(" ");
+        } else if (command.contains(FILE_REMOVEREC.name())) {
+            if (tokens.length > 1) {
+                worker.removeDirRecursive(tokens[1]);
+            }
+        } else if (command.contains(FILE_REMOVE.name())) {
             if (tokens.length > 1) {
                 worker.removeFile(tokens[1]);
-                context.channel().writeAndFlush(context.alloc().heapBuffer(1).writeByte(0));
             }
         } else if (command.contains(FILE_SEARCH.name())) {
-            tokens = command.split(" ", 2);
             if (tokens.length > 1) {
                 worker.searchFile(tokens[1]);
             }
+        } else if(command.contains(FILE_PATHS.name())){
+            worker.populateDirectory(tokens[1], null);
+        } else if(command.contains(FILE_COPY.name())){
+            worker.copyFile(tokens[1], tokens[2]);
+        } else if(command.contains(FILE_MOVE.name())) {
+            worker.moveFile(tokens[1], tokens[2]);
+        } else if(command.contains(FILE_UPLOAD.name())){
+            if(tokens.length == 4){
+                FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);
+                if(f.getSize() == 0){
+                    worker.touchFile(f);
+                } else {
+                    ctx.channel().pipeline().fireUserEventTriggered(f);
+                    ctx.fireChannelRead(FILE_UPLOAD);
+                }
+            }
+        } else if (command.contains(FILE_DOWNLOAD.name())) {
+            ctx.channel().writeAndFlush(new ChunkedFile(worker.getFile(tokens[1])));
         }
     }
+
 }

@@ -2,19 +2,27 @@ package com.pae.cloudstorage.client.network;
 
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
+import com.pae.cloudstorage.common.FSObject;
+
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import static com.pae.cloudstorage.common.Command.AUTH_OUT;
+
+import static com.pae.cloudstorage.common.Command.*;
 
 public class Connector {
+    private static final String COMMDELIM = "%";
+    private static final String FRMDELIM = "$_";
     private final String host = "localhost";
     private final int port = 9999;
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
 
-    public Connector() {
+    public static String getDelimiter() {
+        return COMMDELIM;
+    }
+
+    public void start(){
         try {
             socket = new Socket(host, port);
             in = new DataInputStream(socket.getInputStream());
@@ -29,17 +37,48 @@ public class Connector {
         callBack.call(requestObjectDirect(cmd, arg));
     }
 
-    public void requestObject(Command cmd, CallBack callBack){
-        requestObject(cmd, "", callBack);
-    }
-
     public Object requestObjectDirect(Command cmd, String arg){
-        Object o = null;
-        String command = arg == null || arg.isBlank()? cmd.name() : cmd.name() + " " + arg;
+        String command = arg == null || arg.isBlank()? cmd.name() + FRMDELIM : cmd.name() + COMMDELIM + arg + FRMDELIM;
         try {
             out.write((command).getBytes());
-            ByteArrayInputStream bis = new ByteArrayInputStream(getBytesFromInput());
-            ObjectInputStream ois = new ObjectInputStream(bis);
+            return readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public DataInputStream getDownloadStream(FSObject source){
+        try {
+            out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getPath() + FRMDELIM).getBytes());
+            return in;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public DataOutputStream getUploadStream(FSObject source){
+        String args = String.join(
+                COMMDELIM
+                , source.getName()
+                , source.getPath()
+                , String.valueOf(source.getSize())
+        );
+        Command ans = (Command) requestObjectDirect(FILE_UPLOAD, args);
+        if (ans.equals(FILE_UPLOAD)){
+            return out;
+        } else if(ans.equals(FILE_SKIP)){
+            return null;
+        }
+        // TODO: Throw some exception
+        return null;
+    }
+
+    public Object readObject(){
+        Object o = null;
+        try{
+            ObjectInputStream ois = new ObjectInputStream(in);
             o = ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -47,26 +86,11 @@ public class Connector {
         return o;
     }
 
-    // Reading byte array fom input stream
-    private byte[] getBytesFromInput(){
-        byte[] arr;
-        try {
-            int start = in.readInt();
-            int len = in.readInt();
-            arr = new byte[len];
-            in.read(arr, start, len);
-        } catch (IOException e){
-            e.printStackTrace();
-            return new byte[0];
-        }
-        return arr;
-    }
-
     // Sends bye message to remote server and closes connection.
     public void stop(){
         try {
             if(isConnectionAlive()){
-                out.write(AUTH_OUT.name().getBytes());
+                out.write((AUTH_OUT.name() + FRMDELIM).getBytes());
                 out.flush();
                 socket.close();
             }
@@ -80,14 +104,4 @@ public class Connector {
         return (socket != null && !socket.isClosed()) && (in != null && out != null);
     }
 
-    // Sends request to remote server without any results required.
-    // Awaiting single byte for handling confirmation
-    public void requestNoCallBack(Command cmd, String arg) {
-        try {
-            out.writeUTF(cmd.name() + " " + arg);
-            in.readByte();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

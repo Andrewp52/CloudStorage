@@ -14,13 +14,13 @@ public class MysqlConnector implements DataConnector {
     private static MysqlConnector connector;
     private Connection connection;
 
-    private MysqlConnector(String confFile) throws IOException {
-        conf = ConfigReader.readConfFile(confFile);
+    private MysqlConnector(Map<String, String> conf) throws IOException {
+        this.conf = conf;
     }
 
-    public static MysqlConnector getConnector(String confFile) throws IOException {
+    public static MysqlConnector getConnector(Map<String, String> conf) throws IOException {
         if(connector == null){
-            connector = new MysqlConnector(confFile);
+            connector = new MysqlConnector(conf);
         }
         return connector;
     }
@@ -29,13 +29,13 @@ public class MysqlConnector implements DataConnector {
     public Connection getConnection(){
         if(this.connection == null){
             try {
-                this.ds.setUser(conf.get("dblogin"));
-                this.ds.setPassword(conf.get("dbpass"));
-                this.ds.setDatabaseName(conf.get("dbname"));
-                this.ds.setServerName(conf.get("dbhost"));
-                this.ds.setPort(Integer.parseInt(conf.get("dbport")));
-                this.ds.setLoginTimeout(Integer.parseInt(conf.get("dbtimeout")));
-                this.connection = this.ds.getConnection();
+                ds.setUser(conf.get("dblogin"));
+                ds.setPassword(conf.get("dbpass"));
+                ds.setDatabaseName(conf.get("dbname"));
+                ds.setServerName(conf.get("dbhost"));
+                ds.setPort(Integer.parseInt(conf.get("dbport")));
+                ds.setLoginTimeout(Integer.parseInt(conf.get("dbtimeout")));
+                this.connection = ds.getConnection();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
