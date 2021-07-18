@@ -16,9 +16,7 @@ import static com.pae.cloudstorage.common.Command.*;
  * Main command handler.
  * It is adds automatically by AuthHandler if authentication succeed.
  * When added, it removes AuthHandler from pipeline.
- * Serves client`s commands (filesystem navigation & basic actions)
- * When it reads upload / download command it adds FileReceiverHandler or FileSenderHandler
- * and transfers there last command.
+ * Serves client`s commands (filesystem navigation & actions)
  */
 public class CommInHandler extends SimpleChannelInboundHandler<String> {
     private static final String DELIM = "%";
@@ -27,6 +25,8 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
     private StorageWorker worker;
     private final Logger logger = LogManager.getLogger(CommInHandler.class);
 
+    // Calls by AuthHandler when user-auth is succeed
+    // Initializes StorageWorker and FileReceiverHandler
     public void setup(User user) throws IOException {
         this.user = user;
         worker = new StorageWorker(user.getId(), (a) -> context.fireChannelRead(a[0]));
@@ -65,6 +65,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
         return context;
     }
 
+    // Calls necessary methods depends on client`s command
     private void workWithCommand(String command, ChannelHandlerContext ctx) throws IOException {
         String[] tokens = command.split(DELIM);
         if (command.contains(FILE_LIST.name())) {

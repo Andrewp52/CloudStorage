@@ -50,7 +50,7 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public void removeDirRecursive(String name) {
+    public void removeDirRecursive(String name, CallBack callBack) {
         connector.requestObjectDirect(FILE_REMOVEREC, name);
     }
 

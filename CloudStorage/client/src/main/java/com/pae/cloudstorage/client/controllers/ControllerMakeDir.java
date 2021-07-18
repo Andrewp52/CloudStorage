@@ -23,7 +23,7 @@ public class ControllerMakeDir {
 
     // TODO: do the regex path validation
     private boolean isNameValid(String s){
-        return s.length() > 0;
+        return s.length() > 0 && s.matches("^([a-zA-Z0-9][^*/><?\\|:]*)$");
     }
 
     // Retrieves callback from parent stage.

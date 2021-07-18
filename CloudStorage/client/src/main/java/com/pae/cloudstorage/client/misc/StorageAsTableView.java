@@ -15,12 +15,12 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * FSTableViewPresentation contains methods to work with TableViews
+ * StorageAsTableView contains methods to work with TableViews
  * beyond controller. Represents list of FSObjects as Table with 4 columns
  * and ImageView icons for names depends on isDirectory field.
  */
 //TODO: Засунуть его в какой-нибудь подходящий пакедж.
-public class FSTableViewPresentation {
+public class StorageAsTableView {
     public static void updateTable(TableView tw, List<FSObject> rList){
         ObservableList<FSObject> lst = FXCollections.observableArrayList(rList);
         TableColumn so = (TableColumn) tw.getSortOrder().get(0);

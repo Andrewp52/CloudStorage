@@ -1,5 +1,6 @@
 package com.pae.cloudstorage.client.controllers;
 
+import com.pae.cloudstorage.client.stages.StageDialog;
 import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.client.storage.StorageWorkerLocal;
 import com.pae.cloudstorage.client.storage.StorageWorkerRemote;
@@ -10,14 +11,21 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 
+import java.nio.file.DirectoryNotEmptyException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.pae.cloudstorage.client.misc.WindowURL.DELETE;
+import static com.pae.cloudstorage.client.misc.WindowURL.DELETENOTEMP;
 
 /**
  * Class-controller for all operations with files & directories
- *
+ * such as copy, move, upload, download.
+ * Operation status - label & progress bar updating from here
  */
 public class ControllerProcessing {
+    private Object mon = new Object();
     @FXML public Label operationLabel;
     @FXML public Label statusLabel;
     @FXML public ProgressBar progressBar;
@@ -27,7 +35,7 @@ public class ControllerProcessing {
     StorageWorker remoteWorker;
 
     // Download selected files and directories from remote server (called by StageProcessing)
-    public void download(List<FSObject> sources){
+    public void execDownload(List<FSObject> sources){
         Thread t = new Thread(() -> {
             sources.forEach( fsObject -> {
                 if(fsObject.isDirectory()){
@@ -74,8 +82,8 @@ public class ControllerProcessing {
         );
     }
 
-    // Download file from remote server (called by StageProcessing)
-    public void upload(List<FSObject> sources){
+    // Executes download file from remote server (called by StageProcessing)
+    public void execUpload(List<FSObject> sources){
         Thread t = new Thread(() -> {
             sources.forEach(fsObject -> {
                 if(fsObject.isDirectory()){
@@ -119,6 +127,78 @@ public class ControllerProcessing {
                 ,""
                 , (o) -> Platform.runLater(() -> progressBar.setProgress(((Double)o[0])))
         );
+    }
+
+    // Shows confirmation dialog
+    // Executes remove files
+    public void execRemove(List<FSObject> files){
+        AtomicInteger ans = new AtomicInteger();
+        new StageDialog("Remove file(s)",
+                DELETE,
+                args -> ans.set((int) args[0])).showAndWait();
+        if(ans.get() != 0){
+            Thread t = new Thread(() -> {
+                files.forEach(f -> {
+                    if(f.isDirectory()){
+                        removeDirectory(f, ans);
+                    } else {
+                        removeFile(f, ans);
+                    }
+                });
+                Platform.runLater(() -> close());
+            });
+            t.setDaemon(true);
+            t.start();
+        } else {
+            Platform.runLater(() -> close());
+        }
+    }
+
+    // Removes file or directory
+    // Warns if directory for deletion is not empty
+    // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
+
+    private void removeFile(FSObject file, AtomicInteger ans){
+        StorageWorker sw = remoteWorker == null ? localWorker : remoteWorker;
+        Platform.runLater(() -> progressBar.setProgress(0));
+        try {
+            Platform.runLater(() -> operationLabel.setText("Removing " + file.getName() + "..."));
+            sw.removeFile(file.getName());
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void removeDirectory(FSObject dir, AtomicInteger ans){
+        StorageWorker sw = remoteWorker == null ? localWorker : remoteWorker;
+        try {
+            Platform.runLater(() -> operationLabel.setText("Removing " + dir.getName() + "..."));
+            sw.removeFile(dir.getName());
+        } catch (DirectoryNotEmptyException e) {
+            if (ans.get() != 2 && ans.get() != 3) {
+                Platform.runLater(() -> {
+                    StageDialog sd = new StageDialog("Directory deletion", DELETENOTEMP, o -> ans.set((int) o[0]));
+                    ((ControllerConfirmation) sd.getController()).message.setText("Directory " + dir.getName() + " is not empty. Delete it?");
+                    sd.showAndWait();
+                    synchronized (ans) {
+                        ans.notify();
+                    }
+                });
+                try {
+                    synchronized (ans) {
+                        ans.wait();
+                    }
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+            }
+        }
+        if (ans.get() == 1 || ans.get() == 2) {
+            sw.removeDirRecursive(dir.getName(), args -> Platform.runLater(() -> {
+                operationLabel.setText("Removing " + args[0] + "...");
+                progressBar.setProgress((double) args[1]);
+            }));
+        }
     }
 
     // Setting up class fields (called by StageProcessing)

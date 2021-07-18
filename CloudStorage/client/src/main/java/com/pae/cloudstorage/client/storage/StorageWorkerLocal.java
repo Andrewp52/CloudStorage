@@ -130,22 +130,26 @@ public class StorageWorkerLocal implements StorageWorker{
     }
 
     // Removes directory and all it`s inner content
-    public void removeDirRecursive(String name){
+    public void removeDirRecursive(String name, CallBack callBack){
         Path p = location.resolve(name);
         try{
             Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    callBack.call(file.getFileName(), 0D);
                     Files.setAttribute(file, "dos:readonly", false);
                     Files.delete(file);
+                    callBack.call(file.getFileName(), 1D);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    callBack.call(dir.getFileName(), 0D);
                     Files.setAttribute(dir, "dos:readonly", false);
                     Files.delete(dir);
+                    callBack.call(dir.getFileName(), 1D);
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -224,7 +228,6 @@ public class StorageWorkerLocal implements StorageWorker{
         Path origin = eb.getOrigin();
         List<FSObject> files = new ArrayList<>();
         if(eb.getOrigin().equals(location)){
-            System.out.println("IMPLEMENT SAME ORIGIN-LOCATION COPYPASTE BEHAVIOR");
             return;
         }
         if(!eb.isMove()){

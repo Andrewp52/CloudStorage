@@ -13,6 +13,7 @@ public class FSObject implements Serializable {
    private String type;
    private boolean isDirectory;
    private boolean isReadOnly;
+   private boolean isSearchResult;                                              // When it`s directory is not current location
    private long size;
 
    public FSObject(String name, String path, long size, boolean isDirectory){
@@ -21,6 +22,7 @@ public class FSObject implements Serializable {
        this.size = size;
        this.isDirectory = isDirectory;
    }
+
     public FSObject(Path p, Path location) {
         if(p.getFileName() == null){
             name = p.getRoot().toString();
@@ -44,6 +46,11 @@ public class FSObject implements Serializable {
                 e.printStackTrace();
             }
         }
+    }
+
+    public FSObject(Path name, Path location, boolean isSearchResult) {
+        this(name, location);
+        this.isSearchResult = isSearchResult;
     }
 
     public FSObject getObject(){
@@ -72,5 +79,9 @@ public class FSObject implements Serializable {
 
     public boolean isReadOnly(){
        return this.isReadOnly;
+    }
+
+    public boolean isSearchResult(){
+       return this.isSearchResult;
     }
 }

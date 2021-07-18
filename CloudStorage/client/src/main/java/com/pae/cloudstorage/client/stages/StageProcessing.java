@@ -50,8 +50,9 @@ public class StageProcessing extends Stage {
                 ControllerProcessing c = loader.getController();
                 c.setParams();
                 switch (command){
-                    case FILE_DOWNLOAD: c.download(sources);   break;
-                    case FILE_UPLOAD: c.upload(sources);       break;
+                    case FILE_DOWNLOAD: c.execDownload(sources);   break;
+                    case FILE_UPLOAD: c.execUpload(sources);       break;
+                    case FILE_REMOVE: c.execRemove(sources);       break;
                 }
             });
 

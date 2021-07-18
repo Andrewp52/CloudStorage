@@ -10,13 +10,17 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+/**
+ * Stage for various dialogs
+ * such as actions confirmation, make dir etc.
+ */
 public class StageDialog extends Stage {
     FXMLLoader loader;
     private String dialogName;
     private CallBack callBack;
     private Connector connector;
-    public StageDialog(String dialogName, WindowURL wurl, CallBack callBack) {
-        this.loader = new FXMLLoader(wurl.url());
+    public StageDialog(String dialogName, WindowURL windowURL, CallBack callBack) {
+        this.loader = new FXMLLoader(windowURL.url());
         this.dialogName = dialogName;
         this.callBack = callBack;
         init();

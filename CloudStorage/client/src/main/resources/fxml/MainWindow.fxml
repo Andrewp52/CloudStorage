@@ -141,8 +141,13 @@
                   <contextMenu>
                      <ContextMenu fx:id="remoteContextMenu">
                         <items>
-                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
                            <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
+                           <SeparatorMenuItem></SeparatorMenuItem>
+                           <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
+                           <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
+                           <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />
+                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
                         </items>
                      </ContextMenu>
                   </contextMenu>

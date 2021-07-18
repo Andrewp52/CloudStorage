@@ -9,11 +9,17 @@ import java.net.Socket;
 
 import static com.pae.cloudstorage.common.Command.*;
 
+/**
+ * Class provides network connection and basic methods
+ * to interact with remote host
+ */
 public class Connector {
-    private static final String COMMDELIM = "%";
-    private static final String FRMDELIM = "$_";
+    //TODO:Move it to config
+    private static final String COMMDELIM = "%";        // Command args delimiter
+    private static final String FRMDELIM = "$_";        // Frame delimiter (for netty server)
     private final String host = "localhost";
     private final int port = 9999;
+
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
@@ -22,6 +28,7 @@ public class Connector {
         return COMMDELIM;
     }
 
+    // Opens connection and initializes IO streams.
     public void start(){
         try {
             socket = new Socket(host, port);
@@ -32,11 +39,12 @@ public class Connector {
         }
     }
 
-    // Sends request to remote server expecting Object answer.
+    // Sends request to remote host and callback with answer when answer is received
     public void requestObject(Command cmd, String arg, CallBack callBack){
         callBack.call(requestObjectDirect(cmd, arg));
     }
 
+    // Sends request to remote host and returns received object.
     public Object requestObjectDirect(Command cmd, String arg){
         String command = arg == null || arg.isBlank()? cmd.name() + FRMDELIM : cmd.name() + COMMDELIM + arg + FRMDELIM;
         try {
@@ -48,6 +56,7 @@ public class Connector {
         return null;
     }
 
+    // Sends download request and provides input stream for download
     public DataInputStream getDownloadStream(FSObject source){
         try {
             out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getPath() + FRMDELIM).getBytes());
@@ -58,6 +67,7 @@ public class Connector {
         return null;
     }
 
+    // Sends upload request and provides output stream or null depends on answer
     public DataOutputStream getUploadStream(FSObject source){
         String args = String.join(
                 COMMDELIM
@@ -75,6 +85,7 @@ public class Connector {
         return null;
     }
 
+    // Reads and returns received object from input stream.
     public Object readObject(){
         Object o = null;
         try{

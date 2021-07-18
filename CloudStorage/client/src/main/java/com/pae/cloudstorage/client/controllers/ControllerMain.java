@@ -1,7 +1,7 @@
 package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.misc.ExchangeBuffer;
-import com.pae.cloudstorage.client.misc.FSTableViewPresentation;
+import com.pae.cloudstorage.client.misc.StorageAsTableView;
 import com.pae.cloudstorage.client.storage.*;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.*;
@@ -17,9 +17,7 @@ import javafx.scene.layout.*;
 
 
 import java.net.URL;
-import java.nio.file.DirectoryNotEmptyException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pae.cloudstorage.common.Command.*;
 import static com.pae.cloudstorage.client.misc.WindowURL.*;
@@ -64,8 +62,8 @@ public class ControllerMain implements Initializable {
         remoteFilesTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         remoteFilesTableView.setPlaceholder(new Label("This directory is empty."));
         localFilesTableView.setPlaceholder(new Label("This directory is empty."));
-        FSTableViewPresentation.init(localFilesTableView);
-        FSTableViewPresentation.init(remoteFilesTableView);
+        StorageAsTableView.init(localFilesTableView);
+        StorageAsTableView.init(remoteFilesTableView);
 
         // Remote list mouse click handler
         remoteFilesTableView.setOnMouseClicked(event -> {
@@ -113,7 +111,7 @@ public class ControllerMain implements Initializable {
     // Updates given TableView wiyh given StorageWorker
 
     private void updateFilesList(TableView target, List<FSObject> list){
-        FSTableViewPresentation.updateTable(target, list);
+        StorageAsTableView.updateTable(target, list);
     }
 
     // Calls by TableView onClick handler
@@ -180,45 +178,26 @@ public class ControllerMain implements Initializable {
     }
 
     // Deletes selected file(s) and directories
-    // Warns if directory for deletion is not empty
-    // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
-    // TODO: MOVE TO PROCESSING CONTROLLER
     public void removeSelected(ActionEvent event) {
         TableView tw;
         StorageWorker sw;
-        AtomicInteger ans = new AtomicInteger();
-        new StageDialog("Remove file(s)",
-                DELETE,
-                args -> ans.set((int) args[0])).showAndWait();
-
+        boolean local = false;
         if(isLocalPanelAction(event)){
             tw = localFilesTableView;
             sw = swLocal;
+            local = true;
         } else {
             tw = remoteFilesTableView;
             sw = swRemote;
         }
-
-        if(ans.get() != 0){
-            List<FSObject> selList = tw.getSelectionModel().getSelectedItems();
-            StorageWorker finalSw = sw;
-            selList.forEach(fso -> {
-                String name = fso.getName();
-                try {
-                    finalSw.removeFile(name);
-                } catch (DirectoryNotEmptyException e) {
-                    if(ans.get() != 2 && ans.get() != 3){
-                        StageDialog sd = new StageDialog("Directory deletion", DELETENOTEMP, o -> ans.set((int)o[0]));
-                        ((ControllerConfirmation) sd.getController()).message.setText("Directory " + name + " is not empty. Delete it?");
-                        sd.showAndWait();
-                    }
-                    if(ans.get() == 1 || ans.get() == 2){
-                        sw.removeDirRecursive(name);
-                    }
-                }
-            });
-        }
-        updateFilesList(tw, sw.getFilesList());
+        StageProcessing sp = new StageProcessing(
+                FILE_REMOVE
+                , tw.getSelectionModel().getSelectedItems()
+                , a -> updateFilesList(tw, sw.getFilesList())
+        );
+        sp.setLocalWorker(local ? sw : null);
+        sp.setRemoteWorker(local ? null : sw);
+        sp.show();
     }
 
     // Searches given name (On remote - from user root, local - from current position)
@@ -255,6 +234,7 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    // Writes FSObjects to exchange buffer
     public void copyToBuff(ActionEvent event) {
         TableView tw;
         StorageWorker sw;
@@ -275,11 +255,13 @@ public class ControllerMain implements Initializable {
         );
     }
 
+    // Writes FSObject to exchange buffer & sets move flag
     public void moveToBuff(ActionEvent event) {
         copyToBuff(event);
         exBuffer.setMove(true);
     }
 
+    // Executes paste from exchange buffer on StorageWorker
     public void pasteFromBuff(ActionEvent event) {
         StorageWorker src = exBuffer.isLocal() ? swLocal : swRemote;
         StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
