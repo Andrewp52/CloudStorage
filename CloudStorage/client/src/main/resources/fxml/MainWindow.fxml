@@ -136,7 +136,7 @@
                      <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
                      <TableColumn editable="false" prefWidth="75.0" text="Type" />
                      <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Modified" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="remoteContextMenu">
@@ -278,7 +278,7 @@
                      <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
                      <TableColumn editable="false" prefWidth="75.0" text="Type" />
                      <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Modified" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="localContextMenu">

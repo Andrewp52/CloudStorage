@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
 
 public class FSObject implements Serializable {
 
@@ -12,7 +14,7 @@ public class FSObject implements Serializable {
    private String pathLocRel;                                                   // Location relative path
    private String pathOrigin;                                                   // Path from server root
    private String type;
-   private String modified;
+   private long modified;
    private boolean isDirectory;
    private boolean isReadOnly;
    private boolean isSearchResult;                                              // When it`s directory is not current location
@@ -45,7 +47,7 @@ public class FSObject implements Serializable {
             try {
                 size = Files.size(p);
                 type = Files.probeContentType(p);
-                modified = Files.getLastModifiedTime(p).toString();
+                modified = Files.getLastModifiedTime(p).toMillis();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -56,6 +58,10 @@ public class FSObject implements Serializable {
         this(name, location, root);
         this.pathLocRel = name.getFileName().toString();
         this.isSearchResult = isSearchResult;
+    }
+
+    public long getModified() {
+        return modified;
     }
 
     public FSObject getObject(){
