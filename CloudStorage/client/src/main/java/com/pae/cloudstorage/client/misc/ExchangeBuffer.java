@@ -10,13 +10,11 @@ import java.util.List;
  */
 public class ExchangeBuffer {
        private List<FSObject> list;
-       private Path origin;
        private boolean local;
        private boolean move;
 
-    public ExchangeBuffer(List<FSObject> list, Path origin, boolean local, boolean move) {
+    public ExchangeBuffer(List<FSObject> list, boolean local, boolean move) {
         this.list = list;
-        this.origin = origin;
         this.local = local;
         this.move = move;
     }
@@ -27,10 +25,6 @@ public class ExchangeBuffer {
 
     public List<FSObject> getList() {
         return list;
-    }
-
-    public Path getOrigin() {
-        return origin;
     }
 
     public boolean isLocal() {

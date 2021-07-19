@@ -93,7 +93,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
                 worker.searchFile(tokens[1]);
             }
         } else if(command.contains(FILE_PATHS.name())){
-            worker.populateDirectory(tokens[1], null);
+            worker.populateDirectory(tokens[1]);
         } else if(command.contains(FILE_COPY.name())){
             worker.copyFile(tokens[1], tokens[2]);
         } else if(command.contains(FILE_MOVE.name())) {

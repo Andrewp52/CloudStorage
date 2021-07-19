@@ -9,28 +9,31 @@ public class FSObject implements Serializable {
 
     private static final long serialVersionUID = -6743567631108323096L;         // SERIALIZATION MAGIC....
    private String name;
-   private String path;
+   private String pathLocRel;                                                   // Location relative path
+   private String pathOrigin;                                                   // Path from server root
    private String type;
+   private String modified;
    private boolean isDirectory;
    private boolean isReadOnly;
    private boolean isSearchResult;                                              // When it`s directory is not current location
    private long size;
 
-   public FSObject(String name, String path, long size, boolean isDirectory){
+   public FSObject(String name, String pathLocRel, long size, boolean isDirectory){
        this.name = name;
-       this.path = path;
+       this.pathLocRel = pathLocRel;
        this.size = size;
        this.isDirectory = isDirectory;
    }
 
-    public FSObject(Path p, Path location) {
+    public FSObject(Path p, Path location, Path root) {
         if(p.getFileName() == null){
             name = p.getRoot().toString();
-            path = name;
+            pathLocRel = name;
             isDirectory = true;
         } else {
             name = p.getFileName().toString();
-            path = location.relativize(p).toString();
+            pathLocRel = location.relativize(p).toString();
+            pathOrigin = p.toString();
             isDirectory = Files.isDirectory(p);
             try {
                 isReadOnly = (boolean) Files.getAttribute(p, "dos:readonly");
@@ -42,14 +45,16 @@ public class FSObject implements Serializable {
             try {
                 size = Files.size(p);
                 type = Files.probeContentType(p);
+                modified = Files.getLastModifiedTime(p).toString();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public FSObject(Path name, Path location, boolean isSearchResult) {
-        this(name, location);
+    public FSObject(Path name, Path location, Path root, boolean isSearchResult) {
+        this(name, location, root);
+        this.pathLocRel = name.getFileName().toString();
         this.isSearchResult = isSearchResult;
     }
 
@@ -62,7 +67,7 @@ public class FSObject implements Serializable {
     }
 
     public String getPath() {
-        return path;
+        return pathLocRel;
     }
 
     public long getSize() {
@@ -81,7 +86,7 @@ public class FSObject implements Serializable {
        return this.isReadOnly;
     }
 
-    public boolean isSearchResult(){
-       return this.isSearchResult;
+    public String getOrigin(){
+       return this.pathOrigin;
     }
 }

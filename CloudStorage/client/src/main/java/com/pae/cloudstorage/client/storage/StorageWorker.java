@@ -18,7 +18,7 @@ public interface StorageWorker {
     void removeDirRecursive(String name, CallBack callBack);
     InputStream getStream(FSObject source);
     void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack);
-    List<FSObject> populateDirectory(FSObject source, Path... origin);
+    List<FSObject> populateDirectory(FSObject source);
     void pasteExchBuffer(ExchangeBuffer eb);
     Path getLocation();
 }

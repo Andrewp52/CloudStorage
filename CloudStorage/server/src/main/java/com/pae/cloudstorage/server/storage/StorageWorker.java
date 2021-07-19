@@ -46,7 +46,7 @@ public class StorageWorker {
         Stream<Path> sp = null;
         try {
             sp = Files.list(location);
-            sp.forEach(path -> dirList.add(new FSObject(path, location)));
+            sp.forEach(path -> dirList.add(new FSObject(path, location, usrRoot)));
             sp.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -147,7 +147,7 @@ public class StorageWorker {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     if (dir.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
-                        found.add(new FSObject(dir, location));
+                        found.add(new FSObject(dir, dir.getParent(), usrRoot));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -155,7 +155,7 @@ public class StorageWorker {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (file.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
-                        found.add(new FSObject(file, location));
+                        found.add(new FSObject(file, file.getParent(), usrRoot));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -168,16 +168,15 @@ public class StorageWorker {
 
     // Copies file or directory (with inner content) from it`s origin to current location
     public void copyFile(String name, String originStr){
-        Path origin = usrRoot.resolve(originStr);
-        Path src = origin.resolve(name);
-        if(Files.isDirectory(src)){
-            List<FSObject> files = populateDirectory(name, origin.toString());
+        Path origin = Path.of(originStr);
+        if(Files.isDirectory(origin)){
+            List<FSObject> files = populateDirectory(origin.toString());
             files.forEach(f -> {
                 try {
                     if (f.isDirectory()) {
                         Files.createDirectories(location.resolve(f.getPath()));
                     } else {
-                        Files.copy(origin.resolve(f.getPath()), location.resolve(f.getPath()));
+                        Files.copy(Path.of(f.getOrigin()), location.resolve(f.getPath()));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -189,23 +188,23 @@ public class StorageWorker {
 
     // Moves file or directory from it`s origin to current location
     public void moveFile(String name, String originStr){
-        Path origin = usrRoot.resolve(originStr);
-        Path src = origin.resolve(name);
-        if(Files.isDirectory(src)){
-            List<FSObject> files = populateDirectory(name, origin.toString());
+        Path origin = Path.of(originStr);
+        if(Files.isDirectory(origin)){
+            List<FSObject> files = populateDirectory(originStr);
             files.forEach(f -> {
                 try {
                     if(f.isReadOnly()){
-                        Files.setAttribute(origin.resolve(f.getPath()), "dos:readonly", false);
-                    }
-                    Files.move(origin.resolve(f.getPath()), location.resolve(f.getPath()));
-                    if(f.isReadOnly()){
-                        Files.setAttribute(location.resolve(f.getPath()), "dos:readonly", true);
+                        Files.setAttribute(Path.of(f.getOrigin()), "dos:readonly", false);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+            try {
+                Files.move(origin, location.resolve(name));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         callBack.call(CMD_SUCCESS);
     }
@@ -217,24 +216,24 @@ public class StorageWorker {
 
     // Retrieves all files and directories from given directory
     // Depends on origin is present or not
-    public List<FSObject> populateDirectory(String token, String... origin) {
-        Path src = origin == null ? location : Path.of(origin[0]);
+    public List<FSObject> populateDirectory(String token) {
+        Path src = Path.of(token);
         List<FSObject> list = new ArrayList<>();
         try {
-            Files.walkFileTree(src.resolve(token), new SimpleFileVisitor<Path>(){
+            Files.walkFileTree(src, new SimpleFileVisitor<Path>(){
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(dir, src));
+                    list.add(new FSObject(dir, src.getParent(), usrRoot));
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(file, src));
+                    list.add(new FSObject(file, src.getParent(), usrRoot));
                     return FileVisitResult.CONTINUE;
                 }
             });
-            if(origin == null){
+            if(src.getParent().equals(location)){
                 callBack.call(list);
             }
         } catch (IOException e) {

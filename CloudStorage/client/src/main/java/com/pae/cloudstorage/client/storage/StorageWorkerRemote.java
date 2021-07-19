@@ -86,28 +86,28 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public List<FSObject> populateDirectory(FSObject source, Path... origin) {
-        return (List<FSObject>) connector.requestObjectDirect(FILE_PATHS, source.getName());
+    public List<FSObject> populateDirectory(FSObject source) {
+        return (List<FSObject>) connector.requestObjectDirect(FILE_PATHS, source.getOrigin());
     }
 
     @Override
     public void pasteExchBuffer(ExchangeBuffer eb) {
         if(!eb.isMove()){
-            eb.getList().forEach(f -> copyFile(f, eb.getOrigin()));
+            eb.getList().forEach(f -> copyFile(f));
         } else {
-            eb.getList().forEach(f -> moveFile(f, eb.getOrigin()));
+            eb.getList().forEach(f -> moveFile(f));
         }
     }
 
-    private void copyFile(FSObject file, Path origin){
+    private void copyFile(FSObject file){
         StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
-        args.add(file.getName()).add(origin.toString());;
+        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());;
         Command ans = (Command) connector.requestObjectDirect(FILE_COPY, args.toString());
     }
 
-    private void moveFile(FSObject file, Path origin){
+    private void moveFile(FSObject file){
         StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
-        args.add(file.getName()).add(origin.toString());
+        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());
         Command ans = (Command) connector.requestObjectDirect(FILE_MOVE, args.toString());
     }
 }

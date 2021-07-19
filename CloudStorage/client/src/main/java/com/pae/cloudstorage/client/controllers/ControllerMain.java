@@ -222,6 +222,27 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    public void downloadFromExBuffer(){
+        StageProcessing sp = new StageProcessing(
+                FILE_DOWNLOAD,
+                exBuffer.getList(),
+                args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
+        );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
+        sp.show();
+    }
+
+    public void uploadFromExBuffer(){
+        StageProcessing sp = new StageProcessing(
+                FILE_UPLOAD,
+                exBuffer.getList(),
+                args -> Platform.runLater(() -> updateFilesList(remoteFilesTableView , swRemote.getFilesList()))
+        );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
+        sp.show();
+    }
     // Uploads selected files
     public void uploadSelected() {
         StageProcessing sp = new StageProcessing(
@@ -237,19 +258,15 @@ public class ControllerMain implements Initializable {
     // Writes FSObjects to exchange buffer
     public void copyToBuff(ActionEvent event) {
         TableView tw;
-        StorageWorker sw;
         boolean ebLocal = false;
         if(isLocalPanelAction(event)){
             tw = localFilesTableView;
-            sw = swLocal;
             ebLocal = true;
         } else {
             tw = remoteFilesTableView;
-            sw = swRemote;
         }
         exBuffer = new ExchangeBuffer(
                 new ArrayList<>(tw.getSelectionModel().getSelectedItems())
-                , sw.getLocation()
                 , ebLocal
                 ,false
         );
@@ -267,10 +284,13 @@ public class ControllerMain implements Initializable {
         StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
         if (src == dst){
             src.pasteExchBuffer(exBuffer);
-            updateFilesList(dst instanceof StorageWorkerLocal ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
+            updateFilesList(exBuffer.isLocal() ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
         } else {
-            updateFilesList(localFilesTableView, swLocal.getFilesList());
-            updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+            if(exBuffer.isLocal()){
+                uploadFromExBuffer();
+            } else {
+                downloadFromExBuffer();
+            }
         }
 
     }
