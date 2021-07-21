@@ -156,7 +156,7 @@
          </AnchorPane>
          <AnchorPane maxWidth="-Infinity" minWidth="-Infinity" prefWidth="55.0">
             <VBox alignment="CENTER" layoutX="2.0" layoutY="139.0" AnchorPane.topAnchor="139.0">
-               <Button mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0" prefWidth="50.0">
+               <Button fx:id="downloadButton" disable="true" mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0" prefWidth="50.0">
                   <VBox.margin>
                      <Insets bottom="5.0" />
                   </VBox.margin>
@@ -172,7 +172,7 @@
                      <Tooltip text="Download selected" />
                   </tooltip>
                </Button>
-               <Button mnemonicParsing="false" onAction="#uploadSelected" prefWidth="50.0">
+               <Button fx:id="uploadButton" disable="true" mnemonicParsing="false" onAction="#uploadSelected" prefWidth="50.0">
                   <graphic>
                      <ImageView fitHeight="20.0" fitWidth="35.0" nodeOrientation="RIGHT_TO_LEFT" pickOnBounds="true" preserveRatio="true">
                         <Image url="@../icons/transfer.png" />

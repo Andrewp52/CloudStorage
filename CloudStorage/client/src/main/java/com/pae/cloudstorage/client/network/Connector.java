@@ -34,15 +34,10 @@ public class Connector {
     }
 
     // Opens connection and initializes IO streams.
-    public void start(){
-        try {
+    public void start() throws IOException {
             socket = new Socket(host, port);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e){
-            callBack.call("ERROR", e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     // Sends request to remote host and returns received object.

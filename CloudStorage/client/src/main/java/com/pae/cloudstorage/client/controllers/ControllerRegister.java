@@ -2,6 +2,7 @@ package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.StageDialog;
+import com.pae.cloudstorage.client.stages.StagePopup;
 import com.pae.cloudstorage.common.Command;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
@@ -9,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
+import java.io.IOException;
 import java.util.StringJoiner;
 
 import static com.pae.cloudstorage.common.Command.REG_OK;
@@ -27,7 +29,11 @@ public class ControllerRegister {
     public void register(ActionEvent event) {
         if(isAllDataValid()){
             Connector connector = getConnector();
-            connector.start();
+            try {
+                connector.start();
+            } catch (IOException e) {
+                new StagePopup("ERROR", e.getMessage());
+            }
             String ans = (String) getConnector().requestObjectDirect(Command.REG_REQ, getArgsString());
             if(ans.equals(REG_OK.name())){
                 this.statusLabel.setText("Registration succeed");

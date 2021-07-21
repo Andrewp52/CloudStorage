@@ -16,6 +16,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
@@ -34,7 +35,8 @@ public class ControllerMain implements Initializable {
     @FXML public Label statusLabel;
     @FXML public PasswordField passwordField;
     @FXML public TextField loginField;
-    @FXML public ProgressBar progressBar;
+    @FXML public Button uploadButton;
+    @FXML public Button downloadButton;
 
     private final Connector connector = new Connector(args -> Platform.runLater(() ->connectorMessage(args)));
     private final StorageWorker swLocal = new StorageWorkerLocal();
@@ -52,8 +54,12 @@ public class ControllerMain implements Initializable {
     public void authUser() {
         StringJoiner sj = new StringJoiner(Connector.getDelimiter(), "", "")
                 .add(loginField.getText()).add(passwordField.getText());
-        connector.start();
-        authReceived((String) connector.requestObjectDirect(AUTH_REQ, sj.toString()));
+        try {
+            connector.start();
+            authReceived((String) connector.requestObjectDirect(AUTH_REQ, sj.toString()));
+        } catch (IOException e) {
+            new StagePopup("ERROR", e.getMessage());
+        }
     }
 
     @Override
@@ -103,6 +109,8 @@ public class ControllerMain implements Initializable {
     private void switchControls(boolean enable){
         navLocal.disableProperty().setValue(!enable);
         navRemote.disableProperty().setValue(!enable);
+        uploadButton.disableProperty().setValue(!enable);
+        downloadButton.disableProperty().setValue(!enable);
         if(enable){
             container.getChildren().remove(loginBox);
         } else {
