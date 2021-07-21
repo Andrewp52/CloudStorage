@@ -9,7 +9,8 @@ public enum WindowURL {
     DELETENOTEMP("/fxml/DeleteNonEmptyDialog.fxml"),
     PROFILE("/fxml/ProfileDialog.fxml"),
     PROCESSING("/fxml/ProcessingPopup.fxml"),
-    REGISTER("/fxml/RegisterDialog.fxml");
+    REGISTER("/fxml/RegisterDialog.fxml"),
+    POPUP("/fxml/InfoPopup.fxml");
     String s;
     WindowURL(String s) {
         this.s = s;

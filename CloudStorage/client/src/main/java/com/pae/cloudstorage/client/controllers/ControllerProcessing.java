@@ -154,7 +154,7 @@ public class ControllerProcessing {
         }
     }
 
-    // Removes file or directory
+    // Removes file
     // Warns if directory for deletion is not empty
     // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
 
@@ -169,6 +169,9 @@ public class ControllerProcessing {
         }
     }
 
+    // Removes directory
+    // Warns if directory for deletion is not empty
+    // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
     private void removeDirectory(FSObject dir, AtomicInteger ans){
         StorageWorker sw = remoteWorker == null ? localWorker : remoteWorker;
         try {

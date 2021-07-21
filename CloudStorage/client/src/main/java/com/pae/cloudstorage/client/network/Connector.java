@@ -19,10 +19,15 @@ public class Connector {
     private static final String FRMDELIM = "$_";        // Frame delimiter (for netty server)
     private final String host = "localhost";
     private final int port = 9999;
+    private final CallBack callBack;
 
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
+
+    public Connector(CallBack callBack) {
+        this.callBack = callBack;
+    }
 
     public static String getDelimiter() {
         return COMMDELIM;
@@ -35,22 +40,23 @@ public class Connector {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e){
+            callBack.call("ERROR", e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // Sends request to remote host and callback with answer when answer is received
-    public void requestObject(Command cmd, String arg, CallBack callBack){
-        callBack.call(requestObjectDirect(cmd, arg));
-    }
-
     // Sends request to remote host and returns received object.
     public Object requestObjectDirect(Command cmd, String arg){
+        if(!isConnectionAlive()){
+            callBack.call("ERROR", "Connection is not established");
+            return null;
+        }
         String command = arg == null || arg.isBlank()? cmd.name() + FRMDELIM : cmd.name() + COMMDELIM + arg + FRMDELIM;
         try {
             out.write((command).getBytes());
             return readObject();
         } catch (IOException e) {
+            callBack.call("ERROR", e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -58,10 +64,15 @@ public class Connector {
 
     // Sends download request and provides input stream for download
     public DataInputStream getDownloadStream(FSObject source){
+        if(!isConnectionAlive()){
+            callBack.call("ERROR", "Connection is not established");
+            return null;
+        }
         try {
             out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getPath() + FRMDELIM).getBytes());
             return in;
         } catch (IOException e) {
+            callBack.call("ERROR", e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -69,6 +80,10 @@ public class Connector {
 
     // Sends upload request and provides output stream or null depends on answer
     public DataOutputStream getUploadStream(FSObject source){
+        if(!isConnectionAlive()){
+            callBack.call("ERROR", "Connection is not established");
+            return null;
+        }
         String args = String.join(
                 COMMDELIM
                 , source.getName()
@@ -87,11 +102,16 @@ public class Connector {
 
     // Reads and returns received object from input stream.
     public Object readObject(){
+        if(!isConnectionAlive()){
+            callBack.call("ERROR", "Connection is not established");
+            return null;
+        }
         Object o = null;
         try{
             ObjectInputStream ois = new ObjectInputStream(in);
             o = ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
+            callBack.call("ERROR", e.getMessage());
             e.printStackTrace();
         }
         return o;
@@ -106,6 +126,7 @@ public class Connector {
                 socket.close();
             }
         } catch (IOException e) {
+            callBack.call("ERROR", e.getMessage());
             e.printStackTrace();
         }
     }

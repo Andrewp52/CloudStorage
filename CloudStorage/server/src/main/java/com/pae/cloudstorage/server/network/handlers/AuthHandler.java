@@ -42,7 +42,7 @@ import static com.pae.cloudstorage.common.Command.*;
                 s = AUTH_OK.name();
                 commctx.setup(u);
             } else {
-                logger.debug("User id " + u.getId() + " auth failed");
+                logger.debug("auth for " + ctx.channel().remoteAddress().toString() + " failed");
                 s = AUTH_FAIL.name();
             }
         } else if(command.contains(REG_REQ.name())){

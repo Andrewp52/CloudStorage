@@ -21,7 +21,7 @@ public class ControllerMakeDir {
         ((StageDialog) this.dirNameField.getScene().getWindow()).close();
     }
 
-    // TODO: do the regex path validation
+    // Directory name validation
     private boolean isNameValid(String s){
         return s.length() > 0 && s.matches("^([a-zA-Z0-9][^*/><?\\|:]*)$");
     }

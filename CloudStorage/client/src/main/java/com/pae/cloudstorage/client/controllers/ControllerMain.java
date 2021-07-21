@@ -36,7 +36,7 @@ public class ControllerMain implements Initializable {
     @FXML public TextField loginField;
     @FXML public ProgressBar progressBar;
 
-    private final Connector connector = new Connector();
+    private final Connector connector = new Connector(args -> Platform.runLater(() ->connectorMessage(args)));
     private final StorageWorker swLocal = new StorageWorkerLocal();
     private final StorageWorker swRemote = new StorageWorkerRemote(connector);
     private User user;
@@ -53,7 +53,7 @@ public class ControllerMain implements Initializable {
         StringJoiner sj = new StringJoiner(Connector.getDelimiter(), "", "")
                 .add(loginField.getText()).add(passwordField.getText());
         connector.start();
-        connector.requestObject(AUTH_REQ, sj.toString(), (a) -> Platform.runLater(() -> authReceived((String) a[0])));
+        authReceived((String) connector.requestObjectDirect(AUTH_REQ, sj.toString()));
     }
 
     @Override
@@ -93,6 +93,8 @@ public class ControllerMain implements Initializable {
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
                 updateFilesList(remoteFilesTableView, swRemote.getFilesList());
             }
+        } else if(msg.equals(AUTH_FAIL.name())){
+            new StagePopup("Authentication", "Auth failed...");
         }
         statusLabel.setText(msg);
     }
@@ -321,4 +323,9 @@ public class ControllerMain implements Initializable {
         switchControls(false);
     }
 
+    private void connectorMessage(Object[] args) {
+        String type = (String) args[0];
+        String message = (String) args[1];
+        new StagePopup(type, message);
+    }
 }
