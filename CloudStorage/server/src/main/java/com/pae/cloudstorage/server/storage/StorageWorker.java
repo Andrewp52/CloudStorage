@@ -26,6 +26,9 @@ public class StorageWorker {
     }
     public StorageWorker(int uid, CallBack callBack) throws IOException {
         this.callBack = callBack;
+        if(Files.notExists(SRVROOT)){
+            Files.createDirectory(SRVROOT);
+        }
         this.usrRoot = SRVROOT.resolve(Path.of(String.valueOf(uid)));
         if(!Files.exists(usrRoot)){
             Files.createDirectory(SRVROOT.resolve(Path.of(String.valueOf(uid))));

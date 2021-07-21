@@ -17,9 +17,9 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * StorageAsTableView contains methods to work with TableViews
- * beyond controller. Represents list of FSObjects as Table with 4 columns
+ * StorageAsTableView Represents list of FSObjects as Table with 4 columns
  * and ImageView icons for names depends on isDirectory field.
+ * Contains comparator for each column.
  */
 public class StorageAsTableView {
     public static void updateTable(TableView tw, List<FSObject> rList){
