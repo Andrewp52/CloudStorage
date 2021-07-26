@@ -7,6 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 
+/**
+ * Class represents a file system object
+ * such as file or directory.
+ * Universal for local & remote storage.
+ */
 public class FSObject implements Serializable {
 
     private static final long serialVersionUID = -6743567631108323096L;         // SERIALIZATION MAGIC....
@@ -17,7 +22,6 @@ public class FSObject implements Serializable {
    private long modified;
    private boolean isDirectory;
    private boolean isReadOnly;
-   private boolean isSearchResult;                                              // When it`s directory is not current location
    private long size;
 
    public FSObject(String name, String pathLocRel, long size, boolean isDirectory){
@@ -52,12 +56,6 @@ public class FSObject implements Serializable {
                 e.printStackTrace();
             }
         }
-    }
-
-    public FSObject(Path name, Path location, Path root, boolean isSearchResult) {
-        this(name, location, root);
-        this.pathLocRel = name.getFileName().toString();
-        this.isSearchResult = isSearchResult;
     }
 
     public long getModified() {

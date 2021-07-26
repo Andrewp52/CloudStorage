@@ -21,9 +21,10 @@ import static com.pae.cloudstorage.client.misc.WindowURL.DELETENOTEMP;
 
 /**
  * Class-controller for all operations with files & directories
- * such as copy, move, upload, download.
+ * such as remove, upload, download.
  * Operation status - label & progress bar updating from here
  */
+
 public class ControllerProcessing {
     private Object mon = new Object();
     @FXML public Label operationLabel;
@@ -157,7 +158,6 @@ public class ControllerProcessing {
     // Removes file
     // Warns if directory for deletion is not empty
     // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
-
     private void removeFile(FSObject file, AtomicInteger ans){
         StorageWorker sw = remoteWorker == null ? localWorker : remoteWorker;
         Platform.runLater(() -> progressBar.setProgress(0));
@@ -205,7 +205,7 @@ public class ControllerProcessing {
     }
 
     // Setting up class fields (called by StageProcessing)
-    public void setParams(){
+    public void setup(){
         window = (StageProcessing)this.operationLabel.getParent().getScene().getWindow();
         localWorker = (StorageWorkerLocal) window.getLocalWorker();
         remoteWorker = (StorageWorkerRemote) window.getRemoteWorker();

@@ -21,4 +21,6 @@ public interface StorageWorker {
     List<FSObject> populateDirectory(FSObject source);
     void pasteExchBuffer(ExchangeBuffer eb);
     Path getLocation();
+
+    void rename(FSObject file, String newName);
 }

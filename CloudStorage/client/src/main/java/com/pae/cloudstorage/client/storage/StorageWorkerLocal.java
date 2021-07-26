@@ -267,6 +267,13 @@ public class StorageWorkerLocal implements StorageWorker{
         }
     }
 
+    @Override
+    public void rename(FSObject file, String newName) {
+        Path p = Path.of(file.getOrigin()).getParent();
+        File f = new File(file.getOrigin());
+        f.renameTo(new File(p.toString() + File.separator + newName));
+    }
+
     public void compress(List<FSObject> files, String name){
 
     }

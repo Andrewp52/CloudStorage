@@ -2,6 +2,7 @@ package com.pae.cloudstorage.server.storage;
 
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
+import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.Main;
 
 import java.io.*;
@@ -20,28 +21,26 @@ public class StorageWorker {
     private static final Path SRVROOT;
     private Path usrRoot;
     private Path location;
+    private User user;
     private CallBack callBack;
     static {
         SRVROOT = Path.of(Main.getSrvConfig().get("srvroot"));
     }
-    public StorageWorker(int uid, CallBack callBack) throws IOException {
+    public StorageWorker(User user, CallBack callBack) throws IOException {
+        this.user = user;
         this.callBack = callBack;
         if(Files.notExists(SRVROOT)){
             Files.createDirectory(SRVROOT);
         }
-        this.usrRoot = SRVROOT.resolve(Path.of(String.valueOf(uid)));
+        this.usrRoot = SRVROOT.resolve(Path.of(String.valueOf(this.user.getId())));
         if(!Files.exists(usrRoot)){
-            Files.createDirectory(SRVROOT.resolve(Path.of(String.valueOf(uid))));
+            Files.createDirectory(SRVROOT.resolve(Path.of(String.valueOf(this.user.getId()))));
         }
         location = usrRoot;
     }
 
     public void getLocation() {
         callBack.call(usrRoot.relativize(location).toString());
-    }
-
-    public void setLocation(Path location) {
-        this.location = location;
     }
 
     public void getFilesList(){
@@ -103,6 +102,7 @@ public class StorageWorker {
     // Removes file or directory (except of not empty directory) returns String - operation result.
     public void removeFile(String name) {
         Path p = location.resolve(name);
+        long s = p.toFile().length();
         try {
             Files.delete(p);
             callBack.call(CMD_SUCCESS);
@@ -185,6 +185,12 @@ public class StorageWorker {
                     e.printStackTrace();
                 }
             });
+        } else {
+            try {
+                Files.copy(origin, location.resolve(name));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         callBack.call(CMD_SUCCESS);
     }
@@ -208,13 +214,30 @@ public class StorageWorker {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            try {
+                if((boolean) Files.getAttribute(origin, "dos:readonly")){
+                    Files.setAttribute(origin, "dos:readonly", false);
+                }
+                Files.move(origin, location.resolve(name));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         callBack.call(CMD_SUCCESS);
     }
 
+    // Renames given file or directory
+    public void rename(String oldName, String newName) {
+        Path p = location.resolve(oldName);
+        File f = new File(p.toString());
+        f.renameTo(new File(p.getParent().toString() + File.separator + newName));
+        callBack.call(CMD_SUCCESS);
+    }
+
     // Returns file for sending to client
-    public File getFile(String name) {
-        return new File(location.resolve(Path.of(name)).toString());
+    public File getFile(String origin) {
+        return new File(Path.of(origin).toString());
     }
 
     // Retrieves all files and directories from given directory

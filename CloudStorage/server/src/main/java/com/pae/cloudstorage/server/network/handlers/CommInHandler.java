@@ -2,6 +2,7 @@ package com.pae.cloudstorage.server.network.handlers;
 
 import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.common.User;
+import com.pae.cloudstorage.server.data.DataService;
 import com.pae.cloudstorage.server.storage.StorageWorker;
 import io.netty.channel.*;
 import io.netty.handler.stream.ChunkedFile;
@@ -21,15 +22,17 @@ import static com.pae.cloudstorage.common.Command.*;
 public class CommInHandler extends SimpleChannelInboundHandler<String> {
     private static final String DELIM = "%";
     private ChannelHandlerContext context;
+    private DataService dataService;
     private User user;
     private StorageWorker worker;
     private final Logger logger = LogManager.getLogger(CommInHandler.class);
 
     // Calls by AuthHandler when user-auth is succeed
     // Initializes StorageWorker and FileReceiverHandler
-    public void setup(User user) throws IOException {
+    public void setup(User user, DataService dataService) throws IOException {
         this.user = user;
-        worker = new StorageWorker(user.getId(), (a) -> context.fireChannelRead(a[0]));
+        this.dataService = dataService;
+        worker = new StorageWorker(user, (a) -> context.fireChannelRead(a[0]));
         context.channel().pipeline().get(FileReceiverHandler.class).setStorageWorker(worker);
     }
 
@@ -68,7 +71,14 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
     // Calls necessary methods depends on client`s command
     private void workWithCommand(String command, ChannelHandlerContext ctx) throws IOException {
         String[] tokens = command.split(DELIM);
-        if (command.contains(FILE_LIST.name())) {
+        if(command.contains(PROFILE_UPD.name())){
+            if(dataService.updateProfile(user.getId(), tokens[1], tokens[2], tokens[3], tokens[4])){
+                ctx.fireChannelRead(PROFILE_UPD_Ok);
+                user = dataService.getUserById(user.getId());
+            } else {
+                ctx.fireChannelRead(PROFILE_UPD_FAIL);
+            }
+        } else if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
         } else if (command.contains(LOCATION.name())) {
             worker.getLocation();
@@ -98,6 +108,8 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             worker.copyFile(tokens[1], tokens[2]);
         } else if(command.contains(FILE_MOVE.name())) {
             worker.moveFile(tokens[1], tokens[2]);
+        } else if(command.contains(FILE_RENAME.name())){
+            worker.rename(tokens[1], tokens[2]);
         } else if(command.contains(FILE_UPLOAD.name())){
             if(tokens.length == 4){
                 FSObject f = new FSObject(tokens[1], tokens[2], Long.parseLong(tokens[3]), false);

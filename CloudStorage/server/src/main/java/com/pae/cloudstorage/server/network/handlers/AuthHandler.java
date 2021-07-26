@@ -40,7 +40,7 @@ import static com.pae.cloudstorage.common.Command.*;
             if(u != null){
                 logger.debug("User id " + u.getId() + " auth successful");
                 s = AUTH_OK.name();
-                commctx.setup(u);
+                commctx.setup(u, ds);
             } else {
                 logger.debug("auth for " + ctx.channel().remoteAddress().toString() + " failed");
                 s = AUTH_FAIL.name();

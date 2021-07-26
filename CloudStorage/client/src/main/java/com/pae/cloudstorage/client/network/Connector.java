@@ -12,6 +12,7 @@ import static com.pae.cloudstorage.common.Command.*;
 /**
  * Class provides network connection and basic methods
  * to interact with remote host
+ * Sends sting as request & accepts object as response.
  */
 public class Connector {
     //TODO:Move it to config
@@ -41,7 +42,7 @@ public class Connector {
     }
 
     // Sends request to remote host and returns received object.
-    public Object requestObjectDirect(Command cmd, String arg){
+    public Object requestObject(Command cmd, String arg){
         if(!isConnectionAlive()){
             callBack.call("ERROR", "Connection is not established");
             return null;
@@ -64,7 +65,7 @@ public class Connector {
             return null;
         }
         try {
-            out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getPath() + FRMDELIM).getBytes());
+            out.write((FILE_DOWNLOAD.name() + COMMDELIM + source.getOrigin() + FRMDELIM).getBytes());
             return in;
         } catch (IOException e) {
             callBack.call("ERROR", e.getMessage());
@@ -85,13 +86,12 @@ public class Connector {
                 , source.getPath()
                 , String.valueOf(source.getSize())
         );
-        Command ans = (Command) requestObjectDirect(FILE_UPLOAD, args);
+        Command ans = (Command) requestObject(FILE_UPLOAD, args);
         if (ans.equals(FILE_UPLOAD)){
             return out;
         } else if(ans.equals(FILE_SKIP)){
             return null;
         }
-        // TODO: Throw some exception
         return null;
     }
 

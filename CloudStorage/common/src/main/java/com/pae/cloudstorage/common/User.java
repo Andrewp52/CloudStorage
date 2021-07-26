@@ -27,8 +27,8 @@ public class User implements Serializable {
         return id;
     }
 
-    public String getNick() {
-        return nick;
+    public String getRoot() {
+        return root;
     }
 
     public String getFirstName() {
@@ -43,11 +43,7 @@ public class User implements Serializable {
         return email;
     }
 
-    public String getRoot() {
-        return root;
-    }
-
-    public long getQuota() {
-        return quota;
+    public String getNick() {
+        return nick;
     }
 }

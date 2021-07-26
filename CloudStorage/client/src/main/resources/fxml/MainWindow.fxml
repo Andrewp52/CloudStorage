@@ -9,7 +9,7 @@
    <VBox fx:id="container" layoutX="250.0" layoutY="100.0" minWidth="-Infinity" prefHeight="200.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <MenuBar minWidth="900.0">
          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="Edit profile" />
+            <MenuItem mnemonicParsing="false" onAction="#editProfile" text="Edit profile" />
             <MenuItem mnemonicParsing="false" onAction="#logoff" text="Log off" />
             <MenuItem mnemonicParsing="false" text="Close" />
          </Menu>
@@ -142,8 +142,9 @@
                      <ContextMenu fx:id="remoteContextMenu">
                         <items>
                            <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
-                           <SeparatorMenuItem></SeparatorMenuItem>
+                           <SeparatorMenuItem />
                            <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#renameSelected" text="Rename" />
                            <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
                            <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
                            <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />
@@ -284,8 +285,9 @@
                      <ContextMenu fx:id="localContextMenu">
                         <items>
                            <MenuItem mnemonicParsing="false" onAction="#uploadSelected" text="Upload" />
-                           <SeparatorMenuItem></SeparatorMenuItem>
+                           <SeparatorMenuItem />
                            <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#renameSelected" text="Rename" />
                            <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
                            <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
                            <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />

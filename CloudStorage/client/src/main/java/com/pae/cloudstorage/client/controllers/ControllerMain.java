@@ -56,7 +56,7 @@ public class ControllerMain implements Initializable {
                 .add(loginField.getText()).add(passwordField.getText());
         try {
             connector.start();
-            authReceived((String) connector.requestObjectDirect(AUTH_REQ, sj.toString()));
+            authReceived((String) connector.requestObject(AUTH_REQ, sj.toString()));
         } catch (IOException e) {
             new StagePopup("ERROR", e.getMessage());
         }
@@ -93,7 +93,7 @@ public class ControllerMain implements Initializable {
     // At first run, if auth is ok, enables controls and updates files lists.
     private void authReceived(String msg) {
         if(msg.equals(AUTH_OK.name())){
-            user = (User) connector.requestObjectDirect(PROFILE_REQ, null);
+            user = requestProfile();
             if(user != null){
                 switchControls(true);
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
@@ -103,6 +103,11 @@ public class ControllerMain implements Initializable {
             new StagePopup("Authentication", "Auth failed...");
         }
         statusLabel.setText(msg);
+    }
+
+    // Requests user`s profile
+    private User requestProfile(){
+        return (User) connector.requestObject(PROFILE_REQ, null);
     }
 
     // Switches form controls (on / off)
@@ -136,13 +141,23 @@ public class ControllerMain implements Initializable {
             if (s.isDirectory()) {
                 swLocal.changeDirectory(s.getName());
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
+            } else {
+                new StagePreview(s.getName(), s, swLocal).show();
             }
         } else {
             if(s.isDirectory()){
                 swRemote.changeDirectory(s.getName());
                 updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+            } else {
+                new StagePreview(s.getName(), s, swRemote).show();
             }
         }
+    }
+
+    // Opens profile dialog
+    public void editProfile(){
+        new StageProfile("User`s profile", PROFILE, user, connector).showAndWait();
+        user = requestProfile();
     }
 
     public void goToRoot(Event actionEvent) {
@@ -200,6 +215,9 @@ public class ControllerMain implements Initializable {
             tw = remoteFilesTableView;
             sw = swRemote;
         }
+        if(tw.getSelectionModel().getSelectedItems().size() == 0){
+            return;
+        }
         StageProcessing sp = new StageProcessing(
                 FILE_REMOVE
                 , tw.getSelectionModel().getSelectedItems()
@@ -232,6 +250,7 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    // Downloads files using exchange buffer
     public void downloadFromExBuffer(){
         StageProcessing sp = new StageProcessing(
                 FILE_DOWNLOAD,
@@ -243,6 +262,7 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    // Uploads files using exchange buffer
     public void uploadFromExBuffer(){
         StageProcessing sp = new StageProcessing(
                 FILE_UPLOAD,
@@ -253,6 +273,7 @@ public class ControllerMain implements Initializable {
         sp.setRemoteWorker(swRemote);
         sp.show();
     }
+
     // Uploads selected files
     public void uploadSelected() {
         StageProcessing sp = new StageProcessing(
@@ -320,6 +341,20 @@ public class ControllerMain implements Initializable {
         }
     }
 
+    public void renameSelected(Event event){
+        boolean local = isLocalPanelAction(event);
+        StorageWorker sw = local ? swLocal : swRemote;
+        TableView tw = local ? localFilesTableView : remoteFilesTableView;
+        FSObject selected = (FSObject) tw.getSelectionModel().getSelectedItem();
+        new StageDialog(
+                "Rename"
+                , RENAME
+                , args -> {
+            sw.rename(selected, (String) args[0]);
+        }).showAndWait();
+        updateFilesList(tw, sw.getFilesList());
+    }
+
     // Closes connection.
     public void stop(){
         connector.stop();
@@ -331,6 +366,7 @@ public class ControllerMain implements Initializable {
         switchControls(false);
     }
 
+    // Opens popup window to display message from connector (errors)
     private void connectorMessage(Object[] args) {
         String type = (String) args[0];
         String message = (String) args[1];

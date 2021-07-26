@@ -11,6 +11,8 @@ public enum Command {
     AUTH_OUT,
     PROFILE_REQ,
     PROFILE_UPD,
+    PROFILE_UPD_FAIL,
+    PROFILE_UPD_Ok,
     REG_REQ,
     REG_OK,
     REG_FAIL,
@@ -29,6 +31,8 @@ public enum Command {
     FILE_SEARCH,
     FILE_PATHS,
     FILE_MOVE,
+    FILE_RENAME,
+    SPACE,
 
     LOCATION,
     CMD_SUCCESS,

@@ -30,6 +30,7 @@ public class StorageAsTableView {
         tw.refresh();
     }
 
+    // Builds TableView for List FSObjects
     public static void init(TableView tw){
         TableColumn nameCol = (TableColumn) tw.getColumns().get(0);
         TableColumn typeCol = (TableColumn) tw.getColumns().get(1);
@@ -120,6 +121,7 @@ public class StorageAsTableView {
         tw.getSortOrder().add(nameCol);
     }
 
+    // Sorts list by name. divides files & directories (gather directories together)
     private static class NameComparator implements Comparator<FSObject> {
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -133,6 +135,7 @@ public class StorageAsTableView {
         }
     }
 
+    // Sorts list by size. divides files & directories (gather directories together)
     private static class SizeComparator implements Comparator<FSObject>{
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -148,6 +151,7 @@ public class StorageAsTableView {
         }
     }
 
+    // Sorts list by type. divides files & directories (gather directories together)
     private static class TypeComparator implements Comparator<FSObject>{
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -169,8 +173,8 @@ public class StorageAsTableView {
         }
     }
 
+    // Sorts list by modified time. divides files & directories (gather directories together)
     private static class ModComparator implements Comparator<FSObject> {
-
         @Override
         public int compare(FSObject o1, FSObject o2) {
             if(o1.isDirectory() && o2.isDirectory()){
