@@ -1,7 +1,6 @@
 package com.pae.cloudstorage.common;
 
 import java.io.Serializable;
-import java.util.StringJoiner;
 
 // Class contains user profile (Filling by DataService from DB).
 public class User implements Serializable {
@@ -10,25 +9,21 @@ public class User implements Serializable {
     private String firstName;
     private String lastName;
     private String email;
-    private String root;
     private long quota;
+    private long used;
 
-    public User(int id, String nick, String firstName, String lastName, String email, String root, long quota) {
+    public User(int id, String nick, String firstName, String lastName, String email, long used, long quota) {
         this.id = id;
         this.nick = nick;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.root = root;
         this.quota = quota;
+        this.used = used;
     }
 
     public int getId() {
         return id;
-    }
-
-    public String getRoot() {
-        return root;
     }
 
     public String getFirstName() {
@@ -45,5 +40,29 @@ public class User implements Serializable {
 
     public String getNick() {
         return nick;
+    }
+
+    public long getQuota() {
+        return quota;
+    }
+
+    public long getUsed() {
+        return used;
+    }
+
+    public long getFree(){
+        return quota - used;
+    }
+
+    public void setUsed(long bytes){
+        this.used = bytes;
+    }
+
+    public void addUsed(long bytes){
+        this.used += bytes;
+    }
+
+    public void remUsed(long bytes){
+        this.used -= bytes;
     }
 }

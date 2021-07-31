@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `cloudstor` /*!40100 DEFAULT CHARACTER SET utf8 */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `cloudstor`;
 -- MySQL dump 10.13  Distrib 8.0.22, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: cloudstor
@@ -50,7 +48,7 @@ CREATE TABLE `users` (
   `enabled` tinyint NOT NULL DEFAULT '1',
   `added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -69,6 +67,43 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Temporary view structure for view `v_user`
+--
+
+DROP TABLE IF EXISTS `v_user`;
+/*!50001 DROP VIEW IF EXISTS `v_user`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_user` AS SELECT 
+ 1 AS `uid`,
+ 1 AS `nick`,
+ 1 AS `pass`,
+ 1 AS `fname`,
+ 1 AS `lname`,
+ 1 AS `email`,
+ 1 AS `used`,
+ 1 AS `quota`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Final view structure for view `v_user`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_user`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_user` AS select `users`.`id` AS `uid`,`users`.`nick` AS `nick`,`users`.`pass` AS `pass`,`users`.`fname` AS `fname`,`users`.`lname` AS `lname`,`users`.`email` AS `email`,`st_state`.`used` AS `used`,`st_state`.`quota` AS `quota` from (`users` join `storage_state` `st_state` on((`users`.`id` = `st_state`.`user_id`))) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -79,4 +114,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-07-25  6:41:57
+-- Dump completed on 2021-07-31 19:09:05

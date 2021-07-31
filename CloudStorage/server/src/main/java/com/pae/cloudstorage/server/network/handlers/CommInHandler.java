@@ -10,6 +10,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.StringJoiner;
 
 import static com.pae.cloudstorage.common.Command.*;
 
@@ -34,6 +35,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
         this.dataService = dataService;
         worker = new StorageWorker(user, (a) -> context.fireChannelRead(a[0]));
         context.channel().pipeline().get(FileReceiverHandler.class).setStorageWorker(worker);
+        context.channel().pipeline().get(FileReceiverHandler.class).setUser(user);
     }
 
     public static String getDelimiter() {
@@ -43,6 +45,11 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.context = ctx;
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        this.dataService.updateStorageState(user);
     }
 
     @Override
@@ -78,6 +85,8 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             } else {
                 ctx.fireChannelRead(PROFILE_UPD_FAIL);
             }
+        } else if(command.contains(SPACE.name())){
+            ctx.fireChannelRead(user.getUsed());
         } else if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
         } else if (command.contains(LOCATION.name())) {

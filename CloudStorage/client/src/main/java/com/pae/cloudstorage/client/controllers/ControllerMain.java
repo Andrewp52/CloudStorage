@@ -98,11 +98,11 @@ public class ControllerMain implements Initializable {
                 switchControls(true);
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
                 updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+                updateStatusLabel();
             }
         } else if(msg.equals(AUTH_FAIL.name())){
             new StagePopup("Authentication", "Auth failed...");
         }
-        statusLabel.setText(msg);
     }
 
     // Requests user`s profile
@@ -225,7 +225,11 @@ public class ControllerMain implements Initializable {
         );
         sp.setLocalWorker(local ? sw : null);
         sp.setRemoteWorker(local ? null : sw);
-        sp.show();
+        sp.showAndWait();
+        if(!local){
+            requestUsedSpace();
+            updateStatusLabel();
+        }
     }
 
     // Searches given name (On remote - from user root, local - from current position)
@@ -267,7 +271,11 @@ public class ControllerMain implements Initializable {
         StageProcessing sp = new StageProcessing(
                 FILE_UPLOAD,
                 exBuffer.getList(),
-                args -> Platform.runLater(() -> updateFilesList(remoteFilesTableView , swRemote.getFilesList()))
+                args -> Platform.runLater(() -> {
+                    updateFilesList(remoteFilesTableView , swRemote.getFilesList());
+                    requestUsedSpace();
+                    updateStatusLabel();
+                })
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -279,7 +287,11 @@ public class ControllerMain implements Initializable {
         StageProcessing sp = new StageProcessing(
                 FILE_UPLOAD,
                 localFilesTableView.getSelectionModel().getSelectedItems(),
-                args -> Platform.runLater(() -> updateFilesList(remoteFilesTableView , swRemote.getFilesList()))
+                args -> Platform.runLater(() -> {
+                    updateFilesList(remoteFilesTableView , swRemote.getFilesList());
+                    requestUsedSpace();
+                    updateStatusLabel();
+                })
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -323,7 +335,8 @@ public class ControllerMain implements Initializable {
                 downloadFromExBuffer();
             }
         }
-
+        requestUsedSpace();
+        updateStatusLabel();
     }
 
     // Checks Event`s parent to find out is it local or remote panel.
@@ -371,5 +384,37 @@ public class ControllerMain implements Initializable {
         String type = (String) args[0];
         String message = (String) args[1];
         new StagePopup(type, message);
+    }
+
+    private void requestUsedSpace(){
+        Long ans = (Long) connector.requestObject(SPACE, null);
+        user.setUsed(ans);
+    }
+
+    private void updateStatusLabel(){
+        StringJoiner sj = new StringJoiner(" ");
+        sj.add("Quota:")
+                .add(getFriendlySize(user.getQuota()))
+                .add("Used:")
+                .add(getFriendlySize(user.getUsed()))
+                .add("Free:")
+                .add(getFriendlySize(user.getFree()));
+        this.statusLabel.setText(sj.toString());
+    }
+
+    // Converts size to user friendly values
+    private String getFriendlySize(long bytes){
+        Double sz;
+        sz = bytes / 1_000_000.00d;
+        if(sz > 0){
+            return String.format("%.3f Mb.", sz);
+        } else {
+            sz = Double.valueOf(bytes / 1_000);
+            if(sz > 0){
+                return String.format("%.3f Kb.", sz);
+            } else {
+                return String.valueOf(bytes) + " bytes.";
+            }
+        }
     }
 }

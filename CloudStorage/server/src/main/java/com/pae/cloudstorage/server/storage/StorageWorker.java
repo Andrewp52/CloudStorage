@@ -10,6 +10,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static com.pae.cloudstorage.common.Command.*;
@@ -102,9 +103,10 @@ public class StorageWorker {
     // Removes file or directory (except of not empty directory) returns String - operation result.
     public void removeFile(String name) {
         Path p = location.resolve(name);
-        long s = p.toFile().length();
         try {
+            long size = Files.size(p);
             Files.delete(p);
+            user.remUsed(size);
             callBack.call(CMD_SUCCESS);
         } catch (DirectoryNotEmptyException e){
             callBack.call(FILE_DNE);
@@ -116,10 +118,13 @@ public class StorageWorker {
 
     public void removeDirRecursive(String name){
         Path p = location.resolve(name);
+        AtomicLong size = new AtomicLong();
         try{
             Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
+
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    size.addAndGet(Files.size(file));
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
@@ -136,6 +141,7 @@ public class StorageWorker {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
             });
+            user.remUsed(size.get());
             callBack.call(CMD_SUCCESS);
         } catch (IOException e){
             e.printStackTrace();
@@ -172,6 +178,7 @@ public class StorageWorker {
     // Copies file or directory (with inner content) from it`s origin to current location
     public void copyFile(String name, String originStr){
         Path origin = Path.of(originStr);
+        AtomicLong size = new AtomicLong();
         if(Files.isDirectory(origin)){
             List<FSObject> files = populateDirectory(origin.toString());
             files.forEach(f -> {
@@ -180,6 +187,7 @@ public class StorageWorker {
                         Files.createDirectories(location.resolve(f.getPath()));
                     } else {
                         Files.copy(Path.of(f.getOrigin()), location.resolve(f.getPath()));
+                        size.addAndGet(Files.size(location.resolve(f.getPath())));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -188,10 +196,12 @@ public class StorageWorker {
         } else {
             try {
                 Files.copy(origin, location.resolve(name));
+                size.addAndGet(Files.size(location.resolve(name)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        user.addUsed(size.get());
         callBack.call(CMD_SUCCESS);
     }
 
@@ -281,5 +291,9 @@ public class StorageWorker {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private boolean isFreeSpaceEnough(long forWrite){
+        return this.user.getFree() >= forWrite;
     }
 }
