@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Base Stage for files processing
- * Executes command proper method at window show moment (depend on command).
+ * Executes proper method at window show moment (depend on command).
  * Window closes automatically and calls callback method when process is finished.
  */
 
@@ -42,16 +42,15 @@ public class StageProcessing extends Stage {
                 case FILE_DOWNLOAD: setTitle("Download");   break;
                 case FILE_UPLOAD: setTitle("Upload");       break;
                 case FILE_REMOVE: setTitle("Remove");       break;
-                case FILE_COPY: setTitle("Copy");           break;
-                case FILE_MOVE: setTitle("Move");           break;
             }
             sizeToScene();
             setOnShowing(event -> {
                 ControllerProcessing c = loader.getController();
-                c.setParams();
+                c.setup();
                 switch (command){
-                    case FILE_DOWNLOAD: c.download(sources);   break;
-                    case FILE_UPLOAD: c.upload(sources);       break;
+                    case FILE_DOWNLOAD: c.execDownload(sources);   break;
+                    case FILE_UPLOAD: c.execUpload(sources);       break;
+                    case FILE_REMOVE: c.execRemove(sources);       break;
                 }
             });
 

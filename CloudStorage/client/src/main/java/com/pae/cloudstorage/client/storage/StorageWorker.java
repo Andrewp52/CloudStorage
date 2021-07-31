@@ -15,10 +15,12 @@ public interface StorageWorker {
     void changeDirectory(String name);
     void makeDirectory(String name);
     void removeFile(String name) throws DirectoryNotEmptyException;
-    void removeDirRecursive(String name);
+    void removeDirRecursive(String name, CallBack callBack);
     InputStream getStream(FSObject source);
     void writeFromStream(InputStream in, FSObject source, String path, CallBack callBack);
-    List<FSObject> populateDirectory(FSObject source, Path... origin);
+    List<FSObject> populateDirectory(FSObject source);
     void pasteExchBuffer(ExchangeBuffer eb);
     Path getLocation();
+
+    void rename(FSObject file, String newName);
 }

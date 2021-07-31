@@ -1,7 +1,7 @@
 package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.misc.ExchangeBuffer;
-import com.pae.cloudstorage.client.misc.FSTableViewPresentation;
+import com.pae.cloudstorage.client.misc.StorageAsTableView;
 import com.pae.cloudstorage.client.storage.*;
 import com.pae.cloudstorage.client.network.Connector;
 import com.pae.cloudstorage.client.stages.*;
@@ -16,10 +16,9 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 
 
+import java.io.IOException;
 import java.net.URL;
-import java.nio.file.DirectoryNotEmptyException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pae.cloudstorage.common.Command.*;
 import static com.pae.cloudstorage.client.misc.WindowURL.*;
@@ -36,9 +35,10 @@ public class ControllerMain implements Initializable {
     @FXML public Label statusLabel;
     @FXML public PasswordField passwordField;
     @FXML public TextField loginField;
-    @FXML public ProgressBar progressBar;
+    @FXML public Button uploadButton;
+    @FXML public Button downloadButton;
 
-    private final Connector connector = new Connector();
+    private final Connector connector = new Connector(args -> Platform.runLater(() ->connectorMessage(args)));
     private final StorageWorker swLocal = new StorageWorkerLocal();
     private final StorageWorker swRemote = new StorageWorkerRemote(connector);
     private User user;
@@ -54,8 +54,12 @@ public class ControllerMain implements Initializable {
     public void authUser() {
         StringJoiner sj = new StringJoiner(Connector.getDelimiter(), "", "")
                 .add(loginField.getText()).add(passwordField.getText());
-        connector.start();
-        connector.requestObject(AUTH_REQ, sj.toString(), (a) -> Platform.runLater(() -> authReceived((String) a[0])));
+        try {
+            connector.start();
+            authReceived((String) connector.requestObject(AUTH_REQ, sj.toString()));
+        } catch (IOException e) {
+            new StagePopup("ERROR", e.getMessage());
+        }
     }
 
     @Override
@@ -64,8 +68,8 @@ public class ControllerMain implements Initializable {
         remoteFilesTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         remoteFilesTableView.setPlaceholder(new Label("This directory is empty."));
         localFilesTableView.setPlaceholder(new Label("This directory is empty."));
-        FSTableViewPresentation.init(localFilesTableView);
-        FSTableViewPresentation.init(remoteFilesTableView);
+        StorageAsTableView.init(localFilesTableView);
+        StorageAsTableView.init(remoteFilesTableView);
 
         // Remote list mouse click handler
         remoteFilesTableView.setOnMouseClicked(event -> {
@@ -89,20 +93,29 @@ public class ControllerMain implements Initializable {
     // At first run, if auth is ok, enables controls and updates files lists.
     private void authReceived(String msg) {
         if(msg.equals(AUTH_OK.name())){
-            user = (User) connector.requestObjectDirect(PROFILE_REQ, null);
+            user = requestProfile();
             if(user != null){
                 switchControls(true);
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
                 updateFilesList(remoteFilesTableView, swRemote.getFilesList());
             }
+        } else if(msg.equals(AUTH_FAIL.name())){
+            new StagePopup("Authentication", "Auth failed...");
         }
         statusLabel.setText(msg);
+    }
+
+    // Requests user`s profile
+    private User requestProfile(){
+        return (User) connector.requestObject(PROFILE_REQ, null);
     }
 
     // Switches form controls (on / off)
     private void switchControls(boolean enable){
         navLocal.disableProperty().setValue(!enable);
         navRemote.disableProperty().setValue(!enable);
+        uploadButton.disableProperty().setValue(!enable);
+        downloadButton.disableProperty().setValue(!enable);
         if(enable){
             container.getChildren().remove(loginBox);
         } else {
@@ -113,7 +126,7 @@ public class ControllerMain implements Initializable {
     // Updates given TableView wiyh given StorageWorker
 
     private void updateFilesList(TableView target, List<FSObject> list){
-        FSTableViewPresentation.updateTable(target, list);
+        StorageAsTableView.updateTable(target, list);
     }
 
     // Calls by TableView onClick handler
@@ -128,13 +141,23 @@ public class ControllerMain implements Initializable {
             if (s.isDirectory()) {
                 swLocal.changeDirectory(s.getName());
                 updateFilesList(localFilesTableView, swLocal.getFilesList());
+            } else {
+                new StagePreview(s.getName(), s, swLocal).show();
             }
         } else {
             if(s.isDirectory()){
                 swRemote.changeDirectory(s.getName());
                 updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+            } else {
+                new StagePreview(s.getName(), s, swRemote).show();
             }
         }
+    }
+
+    // Opens profile dialog
+    public void editProfile(){
+        new StageProfile("User`s profile", PROFILE, user, connector).showAndWait();
+        user = requestProfile();
     }
 
     public void goToRoot(Event actionEvent) {
@@ -180,45 +203,29 @@ public class ControllerMain implements Initializable {
     }
 
     // Deletes selected file(s) and directories
-    // Warns if directory for deletion is not empty
-    // Possible answers: 0 - no, 1 - yes, 2 - yes for all, 3 - no for all
-    // TODO: MOVE TO PROCESSING CONTROLLER
     public void removeSelected(ActionEvent event) {
         TableView tw;
         StorageWorker sw;
-        AtomicInteger ans = new AtomicInteger();
-        new StageDialog("Remove file(s)",
-                DELETE,
-                args -> ans.set((int) args[0])).showAndWait();
-
+        boolean local = false;
         if(isLocalPanelAction(event)){
             tw = localFilesTableView;
             sw = swLocal;
+            local = true;
         } else {
             tw = remoteFilesTableView;
             sw = swRemote;
         }
-
-        if(ans.get() != 0){
-            List<FSObject> selList = tw.getSelectionModel().getSelectedItems();
-            StorageWorker finalSw = sw;
-            selList.forEach(fso -> {
-                String name = fso.getName();
-                try {
-                    finalSw.removeFile(name);
-                } catch (DirectoryNotEmptyException e) {
-                    if(ans.get() != 2 && ans.get() != 3){
-                        StageDialog sd = new StageDialog("Directory deletion", DELETENOTEMP, o -> ans.set((int)o[0]));
-                        ((ControllerConfirmation) sd.getController()).message.setText("Directory " + name + " is not empty. Delete it?");
-                        sd.showAndWait();
-                    }
-                    if(ans.get() == 1 || ans.get() == 2){
-                        sw.removeDirRecursive(name);
-                    }
-                }
-            });
+        if(tw.getSelectionModel().getSelectedItems().size() == 0){
+            return;
         }
-        updateFilesList(tw, sw.getFilesList());
+        StageProcessing sp = new StageProcessing(
+                FILE_REMOVE
+                , tw.getSelectionModel().getSelectedItems()
+                , a -> updateFilesList(tw, sw.getFilesList())
+        );
+        sp.setLocalWorker(local ? sw : null);
+        sp.setRemoteWorker(local ? null : sw);
+        sp.show();
     }
 
     // Searches given name (On remote - from user root, local - from current position)
@@ -243,6 +250,30 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    // Downloads files using exchange buffer
+    public void downloadFromExBuffer(){
+        StageProcessing sp = new StageProcessing(
+                FILE_DOWNLOAD,
+                exBuffer.getList(),
+                args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
+        );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
+        sp.show();
+    }
+
+    // Uploads files using exchange buffer
+    public void uploadFromExBuffer(){
+        StageProcessing sp = new StageProcessing(
+                FILE_UPLOAD,
+                exBuffer.getList(),
+                args -> Platform.runLater(() -> updateFilesList(remoteFilesTableView , swRemote.getFilesList()))
+        );
+        sp.setLocalWorker(swLocal);
+        sp.setRemoteWorker(swRemote);
+        sp.show();
+    }
+
     // Uploads selected files
     public void uploadSelected() {
         StageProcessing sp = new StageProcessing(
@@ -255,40 +286,42 @@ public class ControllerMain implements Initializable {
         sp.show();
     }
 
+    // Writes FSObjects to exchange buffer
     public void copyToBuff(ActionEvent event) {
         TableView tw;
-        StorageWorker sw;
         boolean ebLocal = false;
         if(isLocalPanelAction(event)){
             tw = localFilesTableView;
-            sw = swLocal;
             ebLocal = true;
         } else {
             tw = remoteFilesTableView;
-            sw = swRemote;
         }
         exBuffer = new ExchangeBuffer(
                 new ArrayList<>(tw.getSelectionModel().getSelectedItems())
-                , sw.getLocation()
                 , ebLocal
                 ,false
         );
     }
 
+    // Writes FSObject to exchange buffer & sets move flag
     public void moveToBuff(ActionEvent event) {
         copyToBuff(event);
         exBuffer.setMove(true);
     }
 
+    // Executes paste from exchange buffer on StorageWorker
     public void pasteFromBuff(ActionEvent event) {
         StorageWorker src = exBuffer.isLocal() ? swLocal : swRemote;
         StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
         if (src == dst){
             src.pasteExchBuffer(exBuffer);
-            updateFilesList(dst instanceof StorageWorkerLocal ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
+            updateFilesList(exBuffer.isLocal() ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
         } else {
-            updateFilesList(localFilesTableView, swLocal.getFilesList());
-            updateFilesList(remoteFilesTableView, swRemote.getFilesList());
+            if(exBuffer.isLocal()){
+                uploadFromExBuffer();
+            } else {
+                downloadFromExBuffer();
+            }
         }
 
     }
@@ -308,6 +341,20 @@ public class ControllerMain implements Initializable {
         }
     }
 
+    public void renameSelected(Event event){
+        boolean local = isLocalPanelAction(event);
+        StorageWorker sw = local ? swLocal : swRemote;
+        TableView tw = local ? localFilesTableView : remoteFilesTableView;
+        FSObject selected = (FSObject) tw.getSelectionModel().getSelectedItem();
+        new StageDialog(
+                "Rename"
+                , RENAME
+                , args -> {
+            sw.rename(selected, (String) args[0]);
+        }).showAndWait();
+        updateFilesList(tw, sw.getFilesList());
+    }
+
     // Closes connection.
     public void stop(){
         connector.stop();
@@ -319,4 +366,10 @@ public class ControllerMain implements Initializable {
         switchControls(false);
     }
 
+    // Opens popup window to display message from connector (errors)
+    private void connectorMessage(Object[] args) {
+        String type = (String) args[0];
+        String message = (String) args[1];
+        new StagePopup(type, message);
+    }
 }

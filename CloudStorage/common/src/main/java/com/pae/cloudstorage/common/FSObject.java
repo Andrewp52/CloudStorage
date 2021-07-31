@@ -4,31 +4,42 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
 
+/**
+ * Class represents a file system object
+ * such as file or directory.
+ * Universal for local & remote storage.
+ */
 public class FSObject implements Serializable {
 
     private static final long serialVersionUID = -6743567631108323096L;         // SERIALIZATION MAGIC....
    private String name;
-   private String path;
+   private String pathLocRel;                                                   // Location relative path
+   private String pathOrigin;                                                   // Path from server root
    private String type;
+   private long modified;
    private boolean isDirectory;
    private boolean isReadOnly;
    private long size;
 
-   public FSObject(String name, String path, long size, boolean isDirectory){
+   public FSObject(String name, String pathLocRel, long size, boolean isDirectory){
        this.name = name;
-       this.path = path;
+       this.pathLocRel = pathLocRel;
        this.size = size;
        this.isDirectory = isDirectory;
    }
-    public FSObject(Path p, Path location) {
+
+    public FSObject(Path p, Path location, Path root) {
         if(p.getFileName() == null){
             name = p.getRoot().toString();
-            path = name;
+            pathLocRel = name;
             isDirectory = true;
         } else {
             name = p.getFileName().toString();
-            path = location.relativize(p).toString();
+            pathLocRel = location.relativize(p).toString();
+            pathOrigin = p.toString();
             isDirectory = Files.isDirectory(p);
             try {
                 isReadOnly = (boolean) Files.getAttribute(p, "dos:readonly");
@@ -40,10 +51,15 @@ public class FSObject implements Serializable {
             try {
                 size = Files.size(p);
                 type = Files.probeContentType(p);
+                modified = Files.getLastModifiedTime(p).toMillis();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public long getModified() {
+        return modified;
     }
 
     public FSObject getObject(){
@@ -55,7 +71,7 @@ public class FSObject implements Serializable {
     }
 
     public String getPath() {
-        return path;
+        return pathLocRel;
     }
 
     public long getSize() {
@@ -72,5 +88,9 @@ public class FSObject implements Serializable {
 
     public boolean isReadOnly(){
        return this.isReadOnly;
+    }
+
+    public String getOrigin(){
+       return this.pathOrigin;
     }
 }

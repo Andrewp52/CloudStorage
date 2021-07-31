@@ -23,35 +23,35 @@ public class StorageWorkerRemote implements StorageWorker{
 
     @Override
     public Path getLocation() {
-        return Path.of((String) connector.requestObjectDirect(LOCATION, null));
+        return Path.of((String) connector.requestObject(LOCATION, null));
     }
 
     @Override
     public List<FSObject> getFilesList() {
-        return (List<FSObject>) connector.requestObjectDirect(FILE_LIST, null);
+        return (List<FSObject>) connector.requestObject(FILE_LIST, null);
     }
 
     @Override
     public void makeDirectory(String dir) {
-        connector.requestObjectDirect(FILE_MKDIR, dir);
+        connector.requestObject(FILE_MKDIR, dir);
     }
 
     @Override
     public void changeDirectory(String dir) {
-        connector.requestObjectDirect(FILE_CD, dir);
+        connector.requestObject(FILE_CD, dir);
     }
 
     @Override
     public void removeFile(String name) throws DirectoryNotEmptyException {
-        Command c = (Command) connector.requestObjectDirect(FILE_REMOVE, name);
+        Command c = (Command) connector.requestObject(FILE_REMOVE, name);
         if(c.equals(FILE_DNE)){
             throw new DirectoryNotEmptyException(name);
         }
     }
 
     @Override
-    public void removeDirRecursive(String name) {
-        connector.requestObjectDirect(FILE_REMOVEREC, name);
+    public void removeDirRecursive(String name, CallBack callBack) {
+        connector.requestObject(FILE_REMOVEREC, name);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class StorageWorkerRemote implements StorageWorker{
 
     @Override
     public List<FSObject> searchFile(String name) {
-        return (List<FSObject>) connector.requestObjectDirect(FILE_SEARCH, name);
+        return (List<FSObject>) connector.requestObject(FILE_SEARCH, name);
     }
 
     @Override
@@ -86,28 +86,35 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public List<FSObject> populateDirectory(FSObject source, Path... origin) {
-        return (List<FSObject>) connector.requestObjectDirect(FILE_PATHS, source.getName());
+    public List<FSObject> populateDirectory(FSObject source) {
+        return (List<FSObject>) connector.requestObject(FILE_PATHS, source.getOrigin());
     }
 
     @Override
     public void pasteExchBuffer(ExchangeBuffer eb) {
         if(!eb.isMove()){
-            eb.getList().forEach(f -> copyFile(f, eb.getOrigin()));
+            eb.getList().forEach(f -> copyFile(f));
         } else {
-            eb.getList().forEach(f -> moveFile(f, eb.getOrigin()));
+            eb.getList().forEach(f -> moveFile(f));
         }
     }
 
-    private void copyFile(FSObject file, Path origin){
+    private void copyFile(FSObject file){
         StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
-        args.add(file.getName()).add(origin.toString());;
-        Command ans = (Command) connector.requestObjectDirect(FILE_COPY, args.toString());
+        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());;
+        Command ans = (Command) connector.requestObject(FILE_COPY, args.toString());
     }
 
-    private void moveFile(FSObject file, Path origin){
+    private void moveFile(FSObject file){
         StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
-        args.add(file.getName()).add(origin.toString());
-        Command ans = (Command) connector.requestObjectDirect(FILE_MOVE, args.toString());
+        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());
+        Command ans = (Command) connector.requestObject(FILE_MOVE, args.toString());
+    }
+
+    @Override
+    public void rename(FSObject file, String newName) {
+        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
+        args.add(file.getName()).add(newName);
+        Command ans = (Command) connector.requestObject(FILE_RENAME, args.toString());
     }
 }

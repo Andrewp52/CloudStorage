@@ -9,7 +9,7 @@
    <VBox fx:id="container" layoutX="250.0" layoutY="100.0" minWidth="-Infinity" prefHeight="200.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <MenuBar minWidth="900.0">
          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="Edit profile" />
+            <MenuItem mnemonicParsing="false" onAction="#editProfile" text="Edit profile" />
             <MenuItem mnemonicParsing="false" onAction="#logoff" text="Log off" />
             <MenuItem mnemonicParsing="false" text="Close" />
          </Menu>
@@ -136,13 +136,19 @@
                      <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
                      <TableColumn editable="false" prefWidth="75.0" text="Type" />
                      <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Modified" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="remoteContextMenu">
                         <items>
-                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
                            <MenuItem mnemonicParsing="false" onAction="#downloadSelected" text="Download" />
+                           <SeparatorMenuItem />
+                           <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#renameSelected" text="Rename" />
+                           <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
+                           <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
+                           <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />
+                           <MenuItem mnemonicParsing="false" onAction="#removeSelected" text="Remove" />
                         </items>
                      </ContextMenu>
                   </contextMenu>
@@ -151,7 +157,7 @@
          </AnchorPane>
          <AnchorPane maxWidth="-Infinity" minWidth="-Infinity" prefWidth="55.0">
             <VBox alignment="CENTER" layoutX="2.0" layoutY="139.0" AnchorPane.topAnchor="139.0">
-               <Button mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0" prefWidth="50.0">
+               <Button fx:id="downloadButton" disable="true" mnemonicParsing="false" onAction="#downloadSelected" prefHeight="28.0" prefWidth="50.0">
                   <VBox.margin>
                      <Insets bottom="5.0" />
                   </VBox.margin>
@@ -167,7 +173,7 @@
                      <Tooltip text="Download selected" />
                   </tooltip>
                </Button>
-               <Button mnemonicParsing="false" onAction="#uploadSelected" prefWidth="50.0">
+               <Button fx:id="uploadButton" disable="true" mnemonicParsing="false" onAction="#uploadSelected" prefWidth="50.0">
                   <graphic>
                      <ImageView fitHeight="20.0" fitWidth="35.0" nodeOrientation="RIGHT_TO_LEFT" pickOnBounds="true" preserveRatio="true">
                         <Image url="@../icons/transfer.png" />
@@ -273,14 +279,15 @@
                      <TableColumn editable="false" minWidth="120.0" prefWidth="120.0" text="Name" />
                      <TableColumn editable="false" prefWidth="75.0" text="Type" />
                      <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Size" />
-                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Created" />
+                     <TableColumn editable="false" minWidth="50.0" prefWidth="100.0" text="Modified" />
                   </columns>
                   <contextMenu>
                      <ContextMenu fx:id="localContextMenu">
                         <items>
                            <MenuItem mnemonicParsing="false" onAction="#uploadSelected" text="Upload" />
-                           <SeparatorMenuItem></SeparatorMenuItem>
+                           <SeparatorMenuItem />
                            <MenuItem mnemonicParsing="false" onAction="#createDirectory" text="Make dir" />
+                           <MenuItem mnemonicParsing="false" onAction="#renameSelected" text="Rename" />
                            <MenuItem mnemonicParsing="false" onAction="#copyToBuff" text="Copy" />
                            <MenuItem mnemonicParsing="false" onAction="#moveToBuff" text="Cut" />
                            <MenuItem mnemonicParsing="false" onAction="#pasteFromBuff" text="Paste" />

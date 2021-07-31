@@ -5,6 +5,8 @@ import com.pae.cloudstorage.server.storage.StorageWorker;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -20,6 +22,7 @@ import static com.pae.cloudstorage.common.Command.FILE_UPLOAD;
  * When receiving is complete, handler resets back to bypass mode.
  */
 public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
+    private final Logger logger = LogManager.getLogger(FileReceiverHandler.class);
     private FSObject file;
     private StorageWorker worker;
     private RandomAccessFile raf;
@@ -40,7 +43,6 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
         }
     }
 
-    // TODO: DO SOMETHING WITH ZERO-SIZE FILES
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf o) throws Exception {
         if(file != null){
@@ -75,6 +77,6 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.error("File receiver handler error: ", cause);
     }
 }

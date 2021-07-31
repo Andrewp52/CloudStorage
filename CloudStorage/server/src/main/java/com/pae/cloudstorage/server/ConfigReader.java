@@ -1,16 +1,28 @@
 package com.pae.cloudstorage.server;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ConfigReader {
+
+public class ConfigReader {
+    static Logger logger = LogManager.getLogger(ConfigReader.class);
     public static Map<String, String> readConfFile(String name) throws IOException {
+        logger.info("Reading " + name);
         Map<String, String> conf = new HashMap<>();
-        try(FileReader fr = new FileReader(ConfigReader.class.getResource(name).getFile());
+        Path location = null;
+        try {
+            location = Path.of(new File(ConfigReader.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath()).getParent();
+        } catch (URISyntaxException e) {
+            logger.error("Config reading error:", e);
+        }
+        Path p = location.resolve(name);
+        try(FileReader fr = new FileReader(new File(p.toString()));
             BufferedReader br = new BufferedReader(fr)
         ) {
             String s;
@@ -21,8 +33,9 @@ public abstract class ConfigReader {
                     conf.put(tokens[0].trim(), tokens[1].trim());
                 }
             }
+            logger.info(" Ok." + System.lineSeparator());
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Config reading error:", e);
         }
         return conf;
     }

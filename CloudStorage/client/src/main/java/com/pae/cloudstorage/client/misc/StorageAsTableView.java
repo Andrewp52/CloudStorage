@@ -11,16 +11,17 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * FSTableViewPresentation contains methods to work with TableViews
- * beyond controller. Represents list of FSObjects as Table with 4 columns
+ * StorageAsTableView Represents list of FSObjects as Table with 4 columns
  * and ImageView icons for names depends on isDirectory field.
+ * Contains comparator for each column.
  */
-//TODO: Засунуть его в какой-нибудь подходящий пакедж.
-public class FSTableViewPresentation {
+public class StorageAsTableView {
     public static void updateTable(TableView tw, List<FSObject> rList){
         ObservableList<FSObject> lst = FXCollections.observableArrayList(rList);
         TableColumn so = (TableColumn) tw.getSortOrder().get(0);
@@ -29,18 +30,23 @@ public class FSTableViewPresentation {
         tw.refresh();
     }
 
+    // Builds TableView for List FSObjects
     public static void init(TableView tw){
         TableColumn nameCol = (TableColumn) tw.getColumns().get(0);
         TableColumn typeCol = (TableColumn) tw.getColumns().get(1);
         TableColumn sizeCol = (TableColumn) tw.getColumns().get(2);
+        TableColumn modCol = (TableColumn) tw.getColumns().get(3);
 
         nameCol.setCellValueFactory(new PropertyValueFactory<FSObject, FSObject>("object"));
         typeCol.setCellValueFactory(new PropertyValueFactory<FSObject, FSObject>("object"));
         sizeCol.setCellValueFactory(new PropertyValueFactory<FSObject, FSObject>("object"));
+        modCol.setCellValueFactory(new PropertyValueFactory<FSObject, FSObject>("object"));
+
 
         nameCol.setComparator(new NameComparator());
         sizeCol.setComparator(new SizeComparator());
         typeCol.setComparator(new TypeComparator());
+        modCol.setComparator(new ModComparator());
 
         nameCol.setSortType(TableColumn.SortType.ASCENDING);
         sizeCol.setCellFactory(cell -> new TableCell<FSObject, FSObject>(){
@@ -97,9 +103,25 @@ public class FSTableViewPresentation {
                 }
             }
         });
+
+        modCol.setCellFactory(cell -> new TableCell<FSObject, FSObject>() {
+            @Override
+            protected void updateItem(FSObject obj, boolean b) {
+                if (obj == null || b) {
+                    setGraphic(null);
+                } else {
+                    long mod = obj.getModified();
+                    String pattern = "yyyy-MM-dd HH:mm";
+                    SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+                    Label l = new Label(mod == 0? "" : sdf.format(mod));
+                    setGraphic(l);
+                }
+            }
+        });
         tw.getSortOrder().add(nameCol);
     }
 
+    // Sorts list by name. divides files & directories (gather directories together)
     private static class NameComparator implements Comparator<FSObject> {
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -113,6 +135,7 @@ public class FSTableViewPresentation {
         }
     }
 
+    // Sorts list by size. divides files & directories (gather directories together)
     private static class SizeComparator implements Comparator<FSObject>{
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -128,6 +151,7 @@ public class FSTableViewPresentation {
         }
     }
 
+    // Sorts list by type. divides files & directories (gather directories together)
     private static class TypeComparator implements Comparator<FSObject>{
         @Override
         public int compare(FSObject o1, FSObject o2) {
@@ -144,6 +168,28 @@ public class FSTableViewPresentation {
                     return 1;
                 } else {
                     return o1.getType().compareTo(o2.getType());
+                }
+            }
+        }
+    }
+
+    // Sorts list by modified time. divides files & directories (gather directories together)
+    private static class ModComparator implements Comparator<FSObject> {
+        @Override
+        public int compare(FSObject o1, FSObject o2) {
+            if(o1.isDirectory() && o2.isDirectory()){
+                return o1.getName().compareTo(o2.getName());
+            } else if(o1.isDirectory() && !o2.isDirectory()){
+                return -1;
+            } else if (!o1.isDirectory() && o2.isDirectory()){
+                return 1;
+            } else {
+                if(o1.getModified() == 0){
+                    return -1;
+                } else if (o2.getModified() == 0){
+                    return 1;
+                } else {
+                    return Long.compare(o1.getModified(), o2.getModified());
                 }
             }
         }

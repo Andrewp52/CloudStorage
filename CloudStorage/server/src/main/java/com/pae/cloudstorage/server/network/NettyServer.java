@@ -36,11 +36,11 @@ public class NettyServer {
                         @Override
                         protected void initChannel(SocketChannel ch){
                             ch.pipeline()
-                                    .addLast("FILEREC", new FileReceiverHandler())
-                                    .addLast("FRAMEDEC", new DelimiterBasedFrameDecoder(MAXFRAMESIZE, Unpooled.copiedBuffer("$_".getBytes())))
-                                    .addLast("STRDEC", new StringDecoder())
-                                    .addLast("AUTH", new AuthHandler(ds))
-                                    .addLast("COMMIN", new CommInHandler())
+                                    .addLast(new FileReceiverHandler())
+                                    .addLast(new DelimiterBasedFrameDecoder(MAXFRAMESIZE, Unpooled.copiedBuffer("$_".getBytes())))
+                                    .addLast(new StringDecoder())
+                                    .addLast(new AuthHandler(ds))
+                                    .addLast(new CommInHandler())
                                     .addLast(new ObjectOutHandler(), new FileSenderHandler(), new RawOutHandler());
                         }
                     });

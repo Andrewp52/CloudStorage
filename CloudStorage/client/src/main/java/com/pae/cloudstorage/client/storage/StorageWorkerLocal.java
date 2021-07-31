@@ -14,7 +14,8 @@ import java.util.stream.Stream;
 // Class for storage operations.
 
 public class StorageWorkerLocal implements StorageWorker{
-    Path location;
+    private Path location;
+    private Path root;
 
     public Path getLocation() {
         return location.toAbsolutePath();
@@ -28,11 +29,15 @@ public class StorageWorkerLocal implements StorageWorker{
     public List<FSObject> getFilesList() {
         List<FSObject> fList = new ArrayList<>();
         if(location == null){
-            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d, location)));
+            FileSystems.getDefault().getRootDirectories().forEach((d) -> fList.add(new FSObject(d, location, root)));
+            root = null;
         } else {
+            if(root == null){
+                root = location;
+            }
             try{
                 Stream<Path> sp = Files.list(location);
-                sp.forEach(path -> fList.add(new FSObject(path, location)));
+                sp.forEach(path -> fList.add(new FSObject(path, location, root)));
                 sp.close();
             } catch (IOException e){
                 e.printStackTrace();
@@ -60,7 +65,7 @@ public class StorageWorkerLocal implements StorageWorker{
                         filename = dir.getFileName().toString();
                     }
                     if (filename.toLowerCase().contains(name.toLowerCase())) {
-                        found.add(new FSObject(dir, location));
+                        found.add(new FSObject(dir, dir.getParent(), root));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -68,7 +73,7 @@ public class StorageWorkerLocal implements StorageWorker{
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (file.getFileName().toString().toLowerCase().contains(name.toLowerCase())) {
-                        found.add(new FSObject(file, location));
+                        found.add(new FSObject(file, file.getParent(), root));
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -130,22 +135,26 @@ public class StorageWorkerLocal implements StorageWorker{
     }
 
     // Removes directory and all it`s inner content
-    public void removeDirRecursive(String name){
+    public void removeDirRecursive(String name, CallBack callBack){
         Path p = location.resolve(name);
         try{
             Files.walkFileTree(p, new SimpleFileVisitor<Path>(){
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    callBack.call(file.getFileName(), 0D);
                     Files.setAttribute(file, "dos:readonly", false);
                     Files.delete(file);
+                    callBack.call(file.getFileName(), 1D);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    callBack.call(dir.getFileName(), 0D);
                     Files.setAttribute(dir, "dos:readonly", false);
                     Files.delete(dir);
+                    callBack.call(dir.getFileName(), 1D);
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -162,7 +171,7 @@ public class StorageWorkerLocal implements StorageWorker{
 
     @Override
     public InputStream getStream(FSObject source) {
-        File f = new File(location.resolve(source.getPath()).toString());
+        File f = new File(source.getOrigin());
         try {
             FileInputStream fis = new FileInputStream(f);
             return fis;
@@ -194,21 +203,20 @@ public class StorageWorkerLocal implements StorageWorker{
     }
 
     // Retrieves all files and directories info from given directory
-    // If origin is provided paths will be relative to origin, else to current location.
-    public List<FSObject> populateDirectory(FSObject dir, Path... origin) {
-        Path p = origin.length > 0 ? origin[0] : location;
+    public List<FSObject> populateDirectory(FSObject dir) {
+        Path loc = Path.of(dir.getOrigin()).getParent();
         List<FSObject> list = new ArrayList<>();
         try {
-            Files.walkFileTree(p.resolve(dir.getPath()), new SimpleFileVisitor<Path>(){
+            Files.walkFileTree(loc.resolve(dir.getPath()), new SimpleFileVisitor<Path>(){
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(dir, p));
+                    list.add(new FSObject(dir, loc, root));
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    list.add(new FSObject(file, p));
+                    list.add(new FSObject(file, loc, root));
                     return FileVisitResult.CONTINUE;
                 }
             });
@@ -221,27 +229,22 @@ public class StorageWorkerLocal implements StorageWorker{
     // Exchange buffer job (Copy Cut Paste)
     @Override
     public void pasteExchBuffer(ExchangeBuffer eb) {
-        Path origin = eb.getOrigin();
         List<FSObject> files = new ArrayList<>();
-        if(eb.getOrigin().equals(location)){
-            System.out.println("IMPLEMENT SAME ORIGIN-LOCATION COPYPASTE BEHAVIOR");
-            return;
-        }
         if(!eb.isMove()){
-            eb.getList().forEach(fsObject -> files.addAll(populateDirectory(fsObject, origin)));
-            files.forEach(f -> copyFile(f, origin));
+            eb.getList().forEach(fsObject -> files.addAll(populateDirectory(fsObject)));
+            files.forEach(this::copyFile);
         } else {
-            eb.getList().forEach(f -> moveFile(f, origin));
+            eb.getList().forEach(this::moveFile);
         }
     }
 
     // Copies file or directory to the new location.
-    private void copyFile(FSObject file, Path origin){
+    private void copyFile(FSObject file){
         try {
             if (file.isDirectory()) {
                 Files.createDirectories(location.resolve(file.getPath()));
             } else {
-                Files.copy(origin.resolve(file.getPath()), location.resolve(file.getPath()));
+                Files.copy(Path.of(file.getOrigin()), location.resolve(file.getPath()));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -250,18 +253,33 @@ public class StorageWorkerLocal implements StorageWorker{
 
     // Moving file or directory to the new location
     // Read only attribute set/reset is necessary for avoid AccessDeniedException.
-    private void moveFile(FSObject file, Path origin){
+    private void moveFile(FSObject file){
         try {
             if(file.isReadOnly()){
-                Files.setAttribute(origin.resolve(file.getPath()), "dos:readonly", false);
+                Files.setAttribute(Path.of(file.getOrigin()), "dos:readonly", false);
             }
-            Files.move(origin.resolve(file.getPath()), location.resolve(file.getPath()));
+            Files.move(Path.of(file.getOrigin()), location.resolve(file.getPath()));
             if(file.isReadOnly()){
                 Files.setAttribute(location.resolve(file.getPath()), "dos:readonly", true);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void rename(FSObject file, String newName) {
+        Path p = Path.of(file.getOrigin()).getParent();
+        File f = new File(file.getOrigin());
+        f.renameTo(new File(p.toString() + File.separator + newName));
+    }
+
+    public void compress(List<FSObject> files, String name){
+
+    }
+
+    public void deCompress(Path arch){
+
     }
 
 }

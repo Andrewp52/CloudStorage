@@ -9,6 +9,9 @@ import javafx.stage.Stage;
 
 import static com.pae.cloudstorage.client.misc.WindowURL.MAIN;
 
+/**
+ * Main window stage & also application entry point
+ */
 public class StageMain extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
