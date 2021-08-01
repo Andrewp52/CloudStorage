@@ -9,6 +9,7 @@ public enum Command {
     AUTH_OK,
     AUTH_FAIL,
     AUTH_OUT,
+
     PROFILE_REQ,
     PROFILE_UPD,
     PROFILE_UPD_FAIL,
@@ -16,6 +17,7 @@ public enum Command {
     REG_REQ,
     REG_OK,
     REG_FAIL,
+    REG_DUP,
 
     //              Filesystem actions commands
     FILE_UPLOAD,

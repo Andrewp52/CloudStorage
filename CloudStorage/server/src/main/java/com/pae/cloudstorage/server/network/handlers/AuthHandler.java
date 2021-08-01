@@ -47,7 +47,14 @@ import static com.pae.cloudstorage.common.Command.*;
             }
         } else if(command.contains(REG_REQ.name())){
             logger.debug("Registration for " + ctx.channel().remoteAddress().toString());
-            s = register(command) ? REG_OK.name() : REG_FAIL.name();
+            int res = register(command);
+            if(res > 0){
+                s = REG_OK.name();
+            } else if (res < 0){
+                s = REG_DUP.name();
+            } else {
+                s = REG_FAIL.name();
+            }
         }
         commctx.getContext().fireChannelRead(s);
         ctx.fireChannelReadComplete();
@@ -57,16 +64,19 @@ import static com.pae.cloudstorage.common.Command.*;
     // Authenticates user using given login & password
     private User auth(String command){
         String[] tokens = command.split(CommInHandler.getDelimiter());
-        return ds.authUser(tokens[1], tokens[2]);
+        if(tokens.length == 3){
+            return ds.authUser(tokens[1], tokens[2]);
+        }
+        return null;
     }
 
     // Tries to register a new user in database
-    private boolean register(String command){
+    private int register(String command){
         String[] tokens = command.split(CommInHandler.getDelimiter());
         if(tokens.length == 6){
             return ds.registerUser(tokens[1], tokens[2], tokens[3], tokens[4], tokens[5]);
         }
-        return false;
+        return 0;
     }
 
     @Override

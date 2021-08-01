@@ -47,7 +47,7 @@ public class DataService {
     }
 
     // Adds new user into the database.
-    public boolean registerUser(String fname, String lname, String email, String nick, String pass){
+    public int registerUser(String fname, String lname, String email, String nick, String pass){
         try {
             PreparedStatement ps = conn.prepareStatement("insert into users (nick, pass, fname, lname, email) values (?, ?, ?, ?, ?)");
             ps.setString(1, nick);
@@ -55,11 +55,14 @@ public class DataService {
             ps.setString(3, fname);
             ps.setString(4, lname);
             ps.setString(5, email);
-            return ps.executeUpdate() > 0;
+            return ps.executeUpdate();
         } catch (SQLException e) {
+            if(e.getMessage().contains("Duplicate")){
+                return -1;
+            }
             logger.error("DB Register error: ", e);
         }
-        return false;
+        return 0;
     }
 
     // Updates user`s profile (all except password).

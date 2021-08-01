@@ -47,7 +47,9 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        this.dataService.updateStorageState(user);
+        if(dataService != null && user != null){
+            this.dataService.updateStorageState(user);
+        }
     }
 
     @Override
