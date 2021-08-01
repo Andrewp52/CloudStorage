@@ -6,6 +6,7 @@ import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.Command;
 import com.pae.cloudstorage.common.FSObject;
+import com.pae.cloudstorage.common.User;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -21,15 +22,18 @@ import java.util.List;
  */
 
 public class StageProcessing extends Stage {
-    Command command;
-    List<FSObject> sources;
-    StorageWorker localWorker;
-    StorageWorker remoteWorker;
-    CallBack callBack;
-    public StageProcessing(Command command, List<FSObject> sources, CallBack callBack) {
+    private Command command;
+    private List<FSObject> sources;
+    private StorageWorker localWorker;
+    private StorageWorker remoteWorker;
+    private User user;
+    private CallBack callBack;
+
+    public StageProcessing(Command command, List<FSObject> sources, User user, CallBack callBack) {
         this.command = command;
         this.callBack = callBack;
         this.sources = sources;
+        this.user = user;
         init();
     }
 
@@ -77,5 +81,9 @@ public class StageProcessing extends Stage {
 
     public CallBack getCallBack() {
         return callBack;
+    }
+
+    public User getUser() {
+        return this.user;
     }
 }

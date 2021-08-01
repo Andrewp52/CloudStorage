@@ -16,6 +16,8 @@ import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.pae.cloudstorage.client.misc.FriendlySize.getFriendlySize;
+
 /**
  * StorageAsTableView Represents list of FSObjects as Table with 4 columns
  * and ImageView icons for names depends on isDirectory field.
@@ -58,7 +60,7 @@ public class StorageAsTableView {
                     if(obj != null){
                         Label l = new Label();
                         if(!obj.isDirectory()){
-                            l.setText(String.valueOf(obj.getSize()));
+                            l.setText(getFriendlySize(obj.getSize()));
                         } else {
                             l.setText("");
                         }

@@ -10,7 +10,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.StringJoiner;
 
 import static com.pae.cloudstorage.common.Command.*;
 
@@ -85,7 +84,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
             } else {
                 ctx.fireChannelRead(PROFILE_UPD_FAIL);
             }
-        } else if(command.contains(SPACE.name())){
+        } else if(command.contains(SPACE_REQ.name())){
             ctx.fireChannelRead(user.getUsed());
         } else if (command.contains(FILE_LIST.name())) {
             worker.getFilesList();
@@ -112,7 +111,7 @@ public class CommInHandler extends SimpleChannelInboundHandler<String> {
                 worker.searchFile(tokens[1]);
             }
         } else if(command.contains(FILE_PATHS.name())){
-            worker.populateDirectory(tokens[1]);
+            worker.populateDirectory(tokens[1], false);
         } else if(command.contains(FILE_COPY.name())){
             worker.copyFile(tokens[1], tokens[2]);
         } else if(command.contains(FILE_MOVE.name())) {

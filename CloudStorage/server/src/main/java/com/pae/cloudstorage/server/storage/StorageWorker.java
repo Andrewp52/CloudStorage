@@ -4,6 +4,8 @@ import com.pae.cloudstorage.common.CallBack;
 import com.pae.cloudstorage.common.FSObject;
 import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.Main;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.*;
@@ -19,6 +21,7 @@ import static com.pae.cloudstorage.common.Command.*;
 // Needs Callback implementation.
 
 public class StorageWorker {
+    private static final Logger logger = LogManager.getLogger(StorageWorker.class);
     private static final Path SRVROOT;
     private Path usrRoot;
     private Path location;
@@ -52,7 +55,7 @@ public class StorageWorker {
             sp.forEach(path -> dirList.add(new FSObject(path, location, usrRoot)));
             sp.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("List files error: ", e);
         }
         callBack.call(dirList);
     }
@@ -63,7 +66,7 @@ public class StorageWorker {
         try {
             Files.createFile(this.location.resolve(file.getPath()));
         } catch (IOException e){
-            e.printStackTrace();
+            logger.error("Touch file error: ", e);
         }
         callBack.call(FILE_SKIP);
     }
@@ -75,7 +78,7 @@ public class StorageWorker {
                 Files.createDirectories(Path.of(this.location.toString(), dir));
                 getFilesList();
             } catch (IOException e){
-                e.printStackTrace();
+                logger.error("Make dir error: ", e);
             }
         }
     }
@@ -112,7 +115,7 @@ public class StorageWorker {
             callBack.call(FILE_DNE);
         } catch (IOException e) {
             callBack.call(CMD_FAIL);
-            e.printStackTrace();
+            logger.error("Remove file error: ", e);
         }
     }
 
@@ -144,7 +147,7 @@ public class StorageWorker {
             user.remUsed(size.get());
             callBack.call(CMD_SUCCESS);
         } catch (IOException e){
-            e.printStackTrace();
+            logger.error("Remove dir recursive error: ", e);
             callBack.call(CMD_FAIL);
         }
     }
@@ -170,7 +173,7 @@ public class StorageWorker {
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Search file error: ", e);
         }
         callBack.call(found);
     }
@@ -180,28 +183,39 @@ public class StorageWorker {
         Path origin = Path.of(originStr);
         AtomicLong size = new AtomicLong();
         if(Files.isDirectory(origin)){
-            List<FSObject> files = populateDirectory(origin.toString());
-            files.forEach(f -> {
-                try {
-                    if (f.isDirectory()) {
-                        Files.createDirectories(location.resolve(f.getPath()));
-                    } else {
-                        Files.copy(Path.of(f.getOrigin()), location.resolve(f.getPath()));
-                        size.addAndGet(Files.size(location.resolve(f.getPath())));
+            List<FSObject> files = populateDirectory(origin.toString(), true);
+            files.forEach(f -> size.getAndAdd(f.getSize()));
+            if(isFreeSpaceEnough(size.get())){
+                size.set(0);
+                files.forEach(f -> {
+                    try {
+                        if (f.isDirectory()) {
+                            Files.createDirectories(location.resolve(f.getPath()));
+                        } else {
+                            Files.copy(Path.of(f.getOrigin()), location.resolve(f.getPath()));
+                            size.getAndAdd(Files.size(location.resolve(f.getPath())));
+                        }
+                    } catch (IOException e) {
+                        logger.error("Copy file error: ", e);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+                });
+                user.addUsed(size.get());
+            } else {
+                callBack.call(SPACE_NOT_ENOUGH);
+            }
         } else {
             try {
-                Files.copy(origin, location.resolve(name));
-                size.addAndGet(Files.size(location.resolve(name)));
+                if(isFreeSpaceEnough(Files.size(Path.of(originStr)))){
+                    Files.copy(origin, location.resolve(name));
+                    size.getAndAdd(Files.size(location.resolve(name)));
+                    user.addUsed(size.get());
+                } else {
+                    callBack.call(SPACE_NOT_ENOUGH);
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Copy file error: ", e);
             }
         }
-        user.addUsed(size.get());
         callBack.call(CMD_SUCCESS);
     }
 
@@ -209,7 +223,7 @@ public class StorageWorker {
     public void moveFile(String name, String originStr){
         Path origin = Path.of(originStr);
         if(Files.isDirectory(origin)){
-            List<FSObject> files = populateDirectory(originStr);
+            List<FSObject> files = populateDirectory(originStr, true);
             files.forEach(f -> {
                 try {
                     if(f.isReadOnly()){
@@ -222,7 +236,7 @@ public class StorageWorker {
             try {
                 Files.move(origin, location.resolve(name));
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Move file error: ", e);
             }
         } else {
             try {
@@ -231,7 +245,7 @@ public class StorageWorker {
                 }
                 Files.move(origin, location.resolve(name));
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Move file error: ", e);
             }
         }
         callBack.call(CMD_SUCCESS);
@@ -252,7 +266,7 @@ public class StorageWorker {
 
     // Retrieves all files and directories from given directory
     // Depends on origin is present or not
-    public List<FSObject> populateDirectory(String token) {
+    public List<FSObject> populateDirectory(String token, boolean suppressCallBack) {
         Path src = Path.of(token);
         List<FSObject> list = new ArrayList<>();
         try {
@@ -269,11 +283,11 @@ public class StorageWorker {
                     return FileVisitResult.CONTINUE;
                 }
             });
-            if(src.getParent().equals(location)){
+            if(!suppressCallBack){
                 callBack.call(list);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Populate dir error: ", e);
         }
         return list;
     }
@@ -288,7 +302,7 @@ public class StorageWorker {
             raf = new RandomAccessFile(p.toString(), "rw");
             return raf;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Get file for write error: ", e);
         }
         return null;
     }

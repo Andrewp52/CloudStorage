@@ -32,7 +32,8 @@ public enum Command {
     FILE_PATHS,
     FILE_MOVE,
     FILE_RENAME,
-    SPACE,
+    SPACE_REQ,
+    SPACE_NOT_ENOUGH,
 
     LOCATION,
     CMD_SUCCESS,

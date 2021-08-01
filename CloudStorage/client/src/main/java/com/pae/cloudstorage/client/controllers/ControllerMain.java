@@ -19,7 +19,9 @@ import javafx.scene.layout.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static com.pae.cloudstorage.client.misc.FriendlySize.getFriendlySize;
 import static com.pae.cloudstorage.common.Command.*;
 import static com.pae.cloudstorage.client.misc.WindowURL.*;
 
@@ -221,6 +223,7 @@ public class ControllerMain implements Initializable {
         StageProcessing sp = new StageProcessing(
                 FILE_REMOVE
                 , tw.getSelectionModel().getSelectedItems()
+                , user
                 , a -> updateFilesList(tw, sw.getFilesList())
         );
         sp.setLocalWorker(local ? sw : null);
@@ -245,9 +248,10 @@ public class ControllerMain implements Initializable {
     // Downloads selected files
     public void downloadSelected() {
         StageProcessing sp = new StageProcessing(
-                FILE_DOWNLOAD,
-                remoteFilesTableView.getSelectionModel().getSelectedItems(),
-                args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
+                FILE_DOWNLOAD
+                , remoteFilesTableView.getSelectionModel().getSelectedItems()
+                , user
+                , args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -257,9 +261,10 @@ public class ControllerMain implements Initializable {
     // Downloads files using exchange buffer
     public void downloadFromExBuffer(){
         StageProcessing sp = new StageProcessing(
-                FILE_DOWNLOAD,
-                exBuffer.getList(),
-                args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
+                FILE_DOWNLOAD
+                , exBuffer.getList()
+                , user
+                , args -> Platform.runLater(() -> updateFilesList(localFilesTableView , swLocal.getFilesList()))
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -269,13 +274,14 @@ public class ControllerMain implements Initializable {
     // Uploads files using exchange buffer
     public void uploadFromExBuffer(){
         StageProcessing sp = new StageProcessing(
-                FILE_UPLOAD,
-                exBuffer.getList(),
-                args -> Platform.runLater(() -> {
-                    updateFilesList(remoteFilesTableView , swRemote.getFilesList());
-                    requestUsedSpace();
-                    updateStatusLabel();
-                })
+                FILE_UPLOAD
+                , exBuffer.getList()
+                , user
+                , args -> Platform.runLater(() -> {
+            updateFilesList(remoteFilesTableView , swRemote.getFilesList());
+            requestUsedSpace();
+            updateStatusLabel();
+        })
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -285,13 +291,14 @@ public class ControllerMain implements Initializable {
     // Uploads selected files
     public void uploadSelected() {
         StageProcessing sp = new StageProcessing(
-                FILE_UPLOAD,
-                localFilesTableView.getSelectionModel().getSelectedItems(),
-                args -> Platform.runLater(() -> {
-                    updateFilesList(remoteFilesTableView , swRemote.getFilesList());
-                    requestUsedSpace();
-                    updateStatusLabel();
-                })
+                FILE_UPLOAD
+                , this.localFilesTableView.getSelectionModel().getSelectedItems()
+                , this.user
+                , args -> Platform.runLater(() -> {
+            updateFilesList(remoteFilesTableView , swRemote.getFilesList());
+            requestUsedSpace();
+            updateStatusLabel();
+        })
         );
         sp.setLocalWorker(swLocal);
         sp.setRemoteWorker(swRemote);
@@ -326,7 +333,23 @@ public class ControllerMain implements Initializable {
         StorageWorker src = exBuffer.isLocal() ? swLocal : swRemote;
         StorageWorker dst = isLocalPanelAction(event) ? swLocal : swRemote;
         if (src == dst){
-            src.pasteExchBuffer(exBuffer);
+            if(!exBuffer.isLocal() && !exBuffer.isMove()){
+                AtomicLong size = new AtomicLong();
+                exBuffer.getList().forEach(f -> {
+                    if(f.isDirectory()){
+                        src.populateDirectory(f).forEach(fd -> size.getAndAdd(fd.getSize()));
+                    } else {
+                        size.getAndAdd(f.getSize());
+                    }
+                });
+                if(user.getFree() - size.get() >= 0){
+                    src.pasteExchBuffer(exBuffer);
+                } else {
+                    new StagePopup("Copy error", "Not enough free space").show();
+                }
+            } else {
+                src.pasteExchBuffer(exBuffer);
+            }
             updateFilesList(exBuffer.isLocal() ? localFilesTableView : remoteFilesTableView, dst.getFilesList());
         } else {
             if(exBuffer.isLocal()){
@@ -386,11 +409,13 @@ public class ControllerMain implements Initializable {
         new StagePopup(type, message);
     }
 
+    // Requests amount of used space from server & updates it in user object
     private void requestUsedSpace(){
-        Long ans = (Long) connector.requestObject(SPACE, null);
+        Long ans = (Long) connector.requestObject(SPACE_REQ, null);
         user.setUsed(ans);
     }
 
+    // Updates status label with storage space info
     private void updateStatusLabel(){
         StringJoiner sj = new StringJoiner(" ");
         sj.add("Quota:")
@@ -400,21 +425,5 @@ public class ControllerMain implements Initializable {
                 .add("Free:")
                 .add(getFriendlySize(user.getFree()));
         this.statusLabel.setText(sj.toString());
-    }
-
-    // Converts size to user friendly values
-    private String getFriendlySize(long bytes){
-        Double sz;
-        sz = bytes / 1_000_000.00d;
-        if(sz > 0){
-            return String.format("%.3f Mb.", sz);
-        } else {
-            sz = Double.valueOf(bytes / 1_000);
-            if(sz > 0){
-                return String.format("%.3f Kb.", sz);
-            } else {
-                return String.valueOf(bytes) + " bytes.";
-            }
-        }
     }
 }

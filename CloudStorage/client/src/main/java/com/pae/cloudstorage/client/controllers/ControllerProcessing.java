@@ -1,11 +1,13 @@
 package com.pae.cloudstorage.client.controllers;
 
 import com.pae.cloudstorage.client.stages.StageDialog;
+import com.pae.cloudstorage.client.stages.StagePopup;
 import com.pae.cloudstorage.client.storage.StorageWorker;
 import com.pae.cloudstorage.client.storage.StorageWorkerLocal;
 import com.pae.cloudstorage.client.storage.StorageWorkerRemote;
 import com.pae.cloudstorage.client.stages.StageProcessing;
 import com.pae.cloudstorage.common.FSObject;
+import com.pae.cloudstorage.common.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -15,6 +17,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.pae.cloudstorage.client.misc.WindowURL.DELETE;
 import static com.pae.cloudstorage.client.misc.WindowURL.DELETENOTEMP;
@@ -31,9 +34,10 @@ public class ControllerProcessing {
     @FXML public Label statusLabel;
     @FXML public ProgressBar progressBar;
 
-    StageProcessing window;
-    StorageWorker localWorker;
-    StorageWorker remoteWorker;
+    private StageProcessing window;
+    private StorageWorker localWorker;
+    private StorageWorker remoteWorker;
+    private User user;
 
     // Download selected files and directories from remote server (called by StageProcessing)
     public void execDownload(List<FSObject> sources){
@@ -86,17 +90,36 @@ public class ControllerProcessing {
     // Executes download file from remote server (called by StageProcessing)
     public void execUpload(List<FSObject> sources){
         Thread t = new Thread(() -> {
+            AtomicLong size = new AtomicLong();
             sources.forEach(fsObject -> {
-                if(fsObject.isDirectory()){
-                    uploadDirectory(fsObject);
-                } else {
-                    uploadFile(fsObject);
-                }
+                size.addAndGet(getSize(localWorker, fsObject));
             });
+            if(isEnoughSpace(size.get())){
+                sources.forEach(fsObject -> {
+                    if(fsObject.isDirectory()){
+                        uploadDirectory(fsObject);
+                    } else {
+                        uploadFile(fsObject);
+                    }
+                });
+            } else {
+                Platform.runLater(() -> new StagePopup("Upload error", "Not enough free space").show());
+            }
             Platform.runLater(() -> close());
         });
         t.setDaemon(true);
         t.start();
+    }
+
+    private long getSize(StorageWorker worker, FSObject fsObject) {
+        if(fsObject.isDirectory()){
+            List<FSObject> ls = worker.populateDirectory(fsObject);
+            AtomicLong res = new AtomicLong();
+            ls.forEach(f -> res.getAndAdd(f.getSize()));
+            return res.get();
+        } else {
+            return fsObject.getSize();
+        }
     }
 
     // Retrieves all necessary directories from given source on local storage,
@@ -204,11 +227,16 @@ public class ControllerProcessing {
         }
     }
 
+    private boolean isEnoughSpace(long size){
+        return this.user.getFree() - size >= 0;
+    }
+
     // Setting up class fields (called by StageProcessing)
     public void setup(){
-        window = (StageProcessing)this.operationLabel.getParent().getScene().getWindow();
-        localWorker = (StorageWorkerLocal) window.getLocalWorker();
-        remoteWorker = (StorageWorkerRemote) window.getRemoteWorker();
+        this.window = (StageProcessing)this.operationLabel.getParent().getScene().getWindow();
+        this.localWorker = (StorageWorkerLocal) this.window.getLocalWorker();
+        this.remoteWorker = (StorageWorkerRemote) this.window.getRemoteWorker();
+        this.user = this.window.getUser();
     }
 
     // Closes window and calls callback
