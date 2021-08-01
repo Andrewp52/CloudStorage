@@ -21,7 +21,7 @@ import static com.pae.cloudstorage.common.Command.*;
 // Needs Callback implementation.
 
 public class StorageWorker {
-    private static final Logger logger = LogManager.getLogger(StorageWorker.class);
+    private final Logger logger = LogManager.getLogger(StorageWorker.class);
     private static final Path SRVROOT;
     private Path usrRoot;
     private Path location;

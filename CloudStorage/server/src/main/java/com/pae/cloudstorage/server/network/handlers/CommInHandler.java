@@ -15,8 +15,7 @@ import static com.pae.cloudstorage.common.Command.*;
 
 /**
  * Main command handler.
- * It is adds automatically by AuthHandler if authentication succeed.
- * When added, it removes AuthHandler from pipeline.
+ * It configured by setup method called by AuthHandler when auth is succeed.
  * Serves client`s commands (filesystem navigation & actions)
  */
 public class CommInHandler extends SimpleChannelInboundHandler<String> {
