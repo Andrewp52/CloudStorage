@@ -11,7 +11,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.List;
@@ -112,7 +111,7 @@ public class StorageAsTableView {
                 if (obj == null || b) {
                     setGraphic(null);
                 } else {
-                    long mod = obj.getModified();
+                    long mod = obj.getModifiedTime();
                     String pattern = "yyyy-MM-dd HH:mm";
                     SimpleDateFormat sdf = new SimpleDateFormat(pattern);
                     Label l = new Label(mod == 0? "" : sdf.format(mod));
@@ -186,12 +185,12 @@ public class StorageAsTableView {
             } else if (!o1.isDirectory() && o2.isDirectory()){
                 return 1;
             } else {
-                if(o1.getModified() == 0){
+                if(o1.getModifiedTime() == 0){
                     return -1;
-                } else if (o2.getModified() == 0){
+                } else if (o2.getModifiedTime() == 0){
                     return 1;
                 } else {
-                    return Long.compare(o1.getModified(), o2.getModified());
+                    return Long.compare(o1.getModifiedTime(), o2.getModifiedTime());
                 }
             }
         }

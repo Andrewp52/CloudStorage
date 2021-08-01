@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
-import java.text.SimpleDateFormat;
 
 /**
  * Class represents a file system object
@@ -19,7 +17,7 @@ public class FSObject implements Serializable {
    private String pathLocRel;                                                   // Location relative path
    private String pathOrigin;                                                   // Path from server root
    private String type;
-   private long modified;
+   private long modifiedTime;
    private boolean isDirectory;
    private boolean isReadOnly;
    private long size;
@@ -51,15 +49,15 @@ public class FSObject implements Serializable {
             try {
                 size = Files.size(p);
                 type = Files.probeContentType(p);
-                modified = Files.getLastModifiedTime(p).toMillis();
+                modifiedTime = Files.getLastModifiedTime(p).toMillis();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public long getModified() {
-        return modified;
+    public long getModifiedTime() {
+        return modifiedTime;
     }
 
     public FSObject getObject(){
