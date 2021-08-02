@@ -29,8 +29,8 @@ public class ConfigReader {
             String[] tokens;
             while ((s = br.readLine()) != null ){
                 if(!s.isBlank()){
-                    tokens = s.replace("\r", "").replace("\n", "").toLowerCase().split("=");
-                    conf.put(tokens[0].trim(), tokens[1].trim());
+                    tokens = s.replace("\r", "").replace("\n", "").split("=");
+                    conf.put(tokens[0].toLowerCase().trim(), tokens[1].trim());
                 }
             }
             logger.info(" Ok." + System.lineSeparator());

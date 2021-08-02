@@ -24,19 +24,19 @@ public class DataService {
     public User authUser(String nick, String pass){
         User u = null;
         try {
-            PreparedStatement ps = conn.prepareStatement("select * from users where nick = ? and pass = ?");
+            PreparedStatement ps = conn.prepareStatement("select * from v_user where nick = ? and pass = ?");
             ps.setString(1, nick);
             ps.setInt(2, pass.hashCode());
             ResultSet rs = ps.executeQuery();
             if (rs.next()){
-                 u = new User(
+                u = new User(
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(4),
                         rs.getString(5),
                         rs.getString(6),
-                        rs.getString(7),
-                         0                                              // QUOTA IS NOT AVAILABLE NOW
+                        rs.getLong(7),
+                        rs.getLong(8)
                 );
             }
             rs.close();
@@ -47,7 +47,7 @@ public class DataService {
     }
 
     // Adds new user into the database.
-    public boolean registerUser(String fname, String lname, String email, String nick, String pass){
+    public int registerUser(String fname, String lname, String email, String nick, String pass){
         try {
             PreparedStatement ps = conn.prepareStatement("insert into users (nick, pass, fname, lname, email) values (?, ?, ?, ?, ?)");
             ps.setString(1, nick);
@@ -55,11 +55,14 @@ public class DataService {
             ps.setString(3, fname);
             ps.setString(4, lname);
             ps.setString(5, email);
-            return ps.executeUpdate() > 0;
+            return ps.executeUpdate();
         } catch (SQLException e) {
+            if(e.getMessage().contains("Duplicate")){
+                return -1;
+            }
             logger.error("DB Register error: ", e);
         }
-        return false;
+        return 0;
     }
 
     // Updates user`s profile (all except password).
@@ -78,11 +81,24 @@ public class DataService {
         return false;
     }
 
+    // Updates user`s storage state (Total bytes written).
+    public boolean updateStorageState(User u){
+        try {
+            PreparedStatement ps = conn.prepareStatement("update storage_state set used = ? where user_id = ?");
+            ps.setLong(1, u.getUsed());
+            ps.setInt(2, u.getId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.error("DB Storage state update error: ", e);
+        }
+        return false;
+    }
+
     // Retrieves User object by it`s id
     public User getUserById(int id) {
         User u = null;
         try {
-            PreparedStatement ps = conn.prepareStatement("select * from users where id = ?");
+            PreparedStatement ps = conn.prepareStatement("select * from v_user where id = ?");
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()){
@@ -92,9 +108,9 @@ public class DataService {
                         rs.getString(4),
                         rs.getString(5),
                         rs.getString(6),
-                        rs.getString(7),
-                        0                                              // QUOTA IS NOT AVAILABLE NOW
-                );
+                        rs.getLong(7),
+                        rs.getLong(8)
+                       );
             }
             rs.close();
         } catch (SQLException e) {

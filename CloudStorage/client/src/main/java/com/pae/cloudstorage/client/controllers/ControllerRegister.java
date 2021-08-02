@@ -39,7 +39,11 @@ public class ControllerRegister {
                 this.registerButton.setText("Close");
                 this.registerButton.setOnAction(event1 -> this.close());
             } else {
-                this.statusLabel.setText("Registration failed");
+                if(ans.equals(REG_DUP.name())){
+                    this.statusLabel.setText("Nick is already in use.");
+                } else {
+                    this.statusLabel.setText("Registration failed");
+                }
             }
             connector.stop();
         }

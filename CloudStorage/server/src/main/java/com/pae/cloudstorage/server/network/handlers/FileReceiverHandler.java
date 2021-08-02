@@ -1,6 +1,7 @@
 package com.pae.cloudstorage.server.network.handlers;
 
 import com.pae.cloudstorage.common.FSObject;
+import com.pae.cloudstorage.common.User;
 import com.pae.cloudstorage.server.storage.StorageWorker;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,6 +24,7 @@ import static com.pae.cloudstorage.common.Command.FILE_UPLOAD;
  */
 public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private final Logger logger = LogManager.getLogger(FileReceiverHandler.class);
+    private User user;
     private FSObject file;
     private StorageWorker worker;
     private RandomAccessFile raf;
@@ -30,8 +32,12 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private boolean inProgress;
 
     // Storage worker sets by command handler at ChannelActive event.
-    public void setStorageWorker(StorageWorker worker) {
+    void setStorageWorker(StorageWorker worker) {
         this.worker = worker;
+    }
+
+    void setUser(User user){
+        this.user = user;
     }
 
     // Event that turns on this handler in receive mode
@@ -54,6 +60,7 @@ public class FileReceiverHandler extends SimpleChannelInboundHandler<ByteBuf> {
                 o.readBytes(fc, fc.size(), o.readableBytes());
             }
             if(fc.size() == file.getSize()){
+                user.addUsed(file.getSize());
                 resetAll();
             }
             if(!inProgress){

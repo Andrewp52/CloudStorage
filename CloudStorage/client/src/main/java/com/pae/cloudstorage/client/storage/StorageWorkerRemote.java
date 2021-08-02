@@ -91,7 +91,7 @@ public class StorageWorkerRemote implements StorageWorker{
     }
 
     @Override
-    public void pasteExchBuffer(ExchangeBuffer eb) {
+    public void pasteExchBuffer(ExchangeBuffer eb){
         if(!eb.isMove()){
             eb.getList().forEach(f -> copyFile(f));
         } else {
@@ -99,21 +99,21 @@ public class StorageWorkerRemote implements StorageWorker{
         }
     }
 
-    private void copyFile(FSObject file){
-        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
-        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());;
+    private void copyFile(FSObject file) {
+        StringJoiner args = new StringJoiner(Connector.getDelimiter());
+        args.add(file.getName()).add(Path.of(file.getOrigin()).toString());
         Command ans = (Command) connector.requestObject(FILE_COPY, args.toString());
     }
 
     private void moveFile(FSObject file){
-        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
+        StringJoiner args = new StringJoiner(Connector.getDelimiter());
         args.add(file.getName()).add(Path.of(file.getOrigin()).toString());
         Command ans = (Command) connector.requestObject(FILE_MOVE, args.toString());
     }
 
     @Override
     public void rename(FSObject file, String newName) {
-        StringJoiner args = new StringJoiner(Connector.getDelimiter(), "", "");
+        StringJoiner args = new StringJoiner(Connector.getDelimiter());
         args.add(file.getName()).add(newName);
         Command ans = (Command) connector.requestObject(FILE_RENAME, args.toString());
     }

@@ -9,6 +9,7 @@ public enum Command {
     AUTH_OK,
     AUTH_FAIL,
     AUTH_OUT,
+
     PROFILE_REQ,
     PROFILE_UPD,
     PROFILE_UPD_FAIL,
@@ -16,6 +17,7 @@ public enum Command {
     REG_REQ,
     REG_OK,
     REG_FAIL,
+    REG_DUP,
 
     //              Filesystem actions commands
     FILE_UPLOAD,
@@ -32,7 +34,8 @@ public enum Command {
     FILE_PATHS,
     FILE_MOVE,
     FILE_RENAME,
-    SPACE,
+    SPACE_REQ,
+    SPACE_NOT_ENOUGH,
 
     LOCATION,
     CMD_SUCCESS,
